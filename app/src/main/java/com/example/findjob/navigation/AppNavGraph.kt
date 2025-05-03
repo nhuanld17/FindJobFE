@@ -4,9 +4,9 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.findjob.ui.home.HomeScreen
-import com.example.findjob.ui.login.LoginScreen
-import com.example.findjob.ui.register.RegisterScreen
+import com.example.findjob.ui.screen.home.HomeScreen
+import com.example.findjob.ui.screen.login.LoginScreen
+import com.example.findjob.ui.screen.register.RegisterScreen
 
 @Composable
 fun AppNavGraph(navController: NavHostController) {

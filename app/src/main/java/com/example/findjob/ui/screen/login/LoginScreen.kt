@@ -1,10 +1,11 @@
-package com.example.findjob.ui.login
+package com.example.findjob.ui.screen.login
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -54,7 +55,7 @@ fun LoginScreen(navController: NavController, viewModel: LoginViewModel = hiltVi
         if (loginState is LoginState.Error) {
             Text(
                 text = (loginState as LoginState.Error).message,
-                color = androidx.compose.material3.MaterialTheme.colorScheme.error
+                color = MaterialTheme.colorScheme.error
             )
         }
         TextButton(onClick = { navController.navigate(Screen.Register.route) }) {
