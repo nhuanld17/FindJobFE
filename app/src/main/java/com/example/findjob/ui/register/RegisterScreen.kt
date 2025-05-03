@@ -2,7 +2,12 @@ package com.example.findjob.ui.register
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -16,15 +21,26 @@ import com.example.findjob.viewmodel.RegisterViewModel
 import com.example.findjob.viewmodel.RegisterState
 import androidx.compose.runtime.collectAsState
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(
     navController: NavController,
     viewModel: RegisterViewModel = hiltViewModel()
 ) {
+    var role by remember { mutableStateOf("ROLE_EMPLOYEE") }
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val registerState by viewModel.registerState.collectAsState()
+
+    // Dropdown menu state
+    var expanded by remember { mutableStateOf(false) }
+    val roleOptions = listOf("EMPLOYEE", "RECRUITER")
+    val selectedText = when (role) {
+        "ROLE_EMPLOYEE" -> "EMPLOYEE"
+        "ROLE_RECRUITER" -> "RECRUITER"
+        else -> "EMPLOYEE"
+    }
 
     LaunchedEffect(registerState) {
         when (registerState) {
@@ -43,6 +59,44 @@ fun RegisterScreen(
 
         Text(text = "Register", style = MaterialTheme.typography.headlineMedium)
         Spacer(modifier = Modifier.height(16.dp))
+
+        // 👇 Thêm dropdown chọn role
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = !expanded }
+        ) {
+            TextField(
+                value = selectedText,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Select Role") },
+                trailingIcon = {
+                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                },
+                modifier = Modifier
+                    .menuAnchor(MenuAnchorType.PrimaryEditable, enabled = true)
+                    .fillMaxWidth()
+            )
+
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                roleOptions.forEach { item ->
+                    DropdownMenuItem(
+                        text = { Text(item) },
+                        onClick = {
+                            role = when (item) {
+                                "EMPLOYEE" -> "ROLE_EMPLOYEE"
+                                "RECRUITER" -> "ROLE_RECRUITER"
+                                else -> "ROLE_EMPLOYEE"
+                            }
+                            expanded = false
+                        }
+                    )
+                }
+            }
+        }
 
         TextField(
             value = name,
@@ -73,7 +127,7 @@ fun RegisterScreen(
 
         Button(
             onClick = {
-                viewModel.register("USER", name, email, password)
+                viewModel.register(role, name, email, password)
             },
             enabled = registerState !is RegisterState.Loading,
             modifier = Modifier.fillMaxWidth()
