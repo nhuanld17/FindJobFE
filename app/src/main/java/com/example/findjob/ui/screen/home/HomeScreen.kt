@@ -1,4 +1,4 @@
-package com.example.findjob.ui.home
+package com.example.findjob.ui.screen.home
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
