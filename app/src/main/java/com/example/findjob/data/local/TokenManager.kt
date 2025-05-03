@@ -1,8 +1,7 @@
-package com.example.findjob.utils
+package com.example.findjob.data.local
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.util.Log
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -15,11 +14,8 @@ class TokenManager @Inject constructor(
         "token_prefs",
         Context.MODE_PRIVATE
     )
-    private val TAG = "TokenManager"
 
     fun saveTokens(accessToken: String, refreshToken: String) {
-        Log.d(TAG, "Setting access token: ${accessToken.take(10)}...")
-        Log.d(TAG, "Setting refresh token: ${refreshToken.take(10)}...")
         sharedPreferences.edit().apply {
             putString("access_token", accessToken)
             putString("refresh_token", refreshToken)
@@ -31,11 +27,6 @@ class TokenManager @Inject constructor(
     fun getRefreshToken(): String? = sharedPreferences.getString("refresh_token", null)
 
     fun clearTokens() {
-        Log.d(TAG, "Clearing tokens")
         sharedPreferences.edit().clear().apply()
     }
-
-    fun hasValidTokens(): Boolean {
-        return !getAccessToken().isNullOrEmpty() && !getRefreshToken().isNullOrEmpty()
-    }
-}
+} 

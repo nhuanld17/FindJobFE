@@ -2,7 +2,11 @@ package com.example.findjob.di
 
 import com.example.findjob.data.remote.AuthInterceptor
 import com.example.findjob.data.remote.TokenAuthenticator
+import com.example.findjob.data.repository.AuthRepository
 import com.example.findjob.utils.TokenManager
+import com.example.findjob.data.remote.ApiService
+import com.example.findjob.data.remote.TokenRefreshService
+import com.example.findjob.data.remote.TokenRefreshServiceImpl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -33,10 +37,31 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideTokenAuthenticator(
-        tokenManager: TokenManager,
-        authApi: com.example.findjob.data.remote.AuthApi
-    ): TokenAuthenticator = TokenAuthenticator(tokenManager, authApi)
+    fun provideTokenAuthenticator(tokenManager: TokenManager): TokenAuthenticator {
+        return TokenAuthenticator(tokenManager)
+    }
+
+    @Provides
+    @Singleton
+    fun provideRetrofit(client: OkHttpClient): Retrofit {
+        return Retrofit.Builder()
+            .baseUrl(BASE_URL)
+            .client(client)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideApiService(retrofit: Retrofit): ApiService {
+        return retrofit.create(ApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideTokenRefreshService(apiService: ApiService, tokenManager: TokenManager): TokenRefreshService {
+        return TokenRefreshServiceImpl(apiService, tokenManager)
+    }
 
     @Provides
     @Singleton
@@ -52,16 +77,6 @@ object NetworkModule {
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
-            .build()
-    }
-
-    @Provides
-    @Singleton
-    fun provideRetrofit(client: OkHttpClient): Retrofit {
-        return Retrofit.Builder()
-            .baseUrl(BASE_URL)
-            .client(client)
-            .addConverterFactory(GsonConverterFactory.create())
             .build()
     }
 }

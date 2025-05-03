@@ -2,9 +2,13 @@ package com.example.findjob.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.findjob.data.model.AuthResponse
 import com.example.findjob.data.repository.AuthRepository
 import com.example.findjob.utils.TokenManager
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -13,16 +17,26 @@ class LoginViewModel @Inject constructor(
     private val repository: AuthRepository
 ) : ViewModel() {
 
-    fun login(email: String, password: String, onSuccess: () -> Unit) {
+    private val _loginState = MutableStateFlow<LoginState>(LoginState.Idle)
+    val loginState: StateFlow<LoginState> = _loginState.asStateFlow()
+
+    fun login(email: String, password: String) {
         viewModelScope.launch {
-            try {
-                val response = repository.login(email, password)
-                TokenManager.accessToken = response.accessToken
-                TokenManager.refreshToken = response.refreshToken
-                onSuccess()
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
+            _loginState.value = LoginState.Loading
+            repository.login(email, password)
+                .onSuccess { authResponse ->
+                    _loginState.value = LoginState.Success(authResponse)
+                }
+                .onFailure { error ->
+                    _loginState.value = LoginState.Error(error.message ?: "Unknown error")
+                }
         }
     }
+}
+
+sealed class LoginState {
+    object Idle : LoginState()
+    object Loading : LoginState()
+    data class Success(val authResponse: AuthResponse) : LoginState()
+    data class Error(val message: String) : LoginState()
 }

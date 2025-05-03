@@ -1,6 +1,5 @@
 package com.example.findjob.ui.home
 
-
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -9,12 +8,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.findjob.utils.TokenManager
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.findjob.viewmodel.HomeViewModel
 
 @Composable
-fun HomeScreen() {
-    val accessToken = TokenManager.accessToken ?: "No Access Token"
-    val refreshToken = TokenManager.refreshToken ?: "No Refresh Token"
+fun HomeScreen(
+    viewModel: HomeViewModel = hiltViewModel()
+) {
+    val accessToken = remember { viewModel.tokenManager.getAccessToken() } ?: "No Access Token"
+    val refreshToken = remember { viewModel.tokenManager.getRefreshToken() } ?: "No Refresh Token"
 
     Column(
         modifier = Modifier
@@ -34,9 +36,7 @@ fun HomeScreen() {
         Spacer(modifier = Modifier.height(32.dp))
 
         Button(onClick = {
-            // Simulate logout
-            TokenManager.accessToken = null
-            TokenManager.refreshToken = null
+            viewModel.logout()
         }) {
             Text("Logout")
         }

@@ -1,6 +1,5 @@
 package com.example.findjob.ui.register
 
-
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -14,6 +13,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.findjob.navigation.Screen
 import com.example.findjob.viewmodel.RegisterViewModel
+import com.example.findjob.viewmodel.RegisterState
+import androidx.compose.runtime.collectAsState
 
 @Composable
 fun RegisterScreen(
@@ -23,6 +24,18 @@ fun RegisterScreen(
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    val registerState by viewModel.registerState.collectAsState()
+
+    LaunchedEffect(registerState) {
+        when (registerState) {
+            is RegisterState.Success -> {
+                navController.navigate(Screen.Home.route) {
+                    popUpTo(Screen.Login.route) { inclusive = true }
+                }
+            }
+            else -> {}
+        }
+    }
 
     Column(modifier = Modifier
         .fillMaxSize()
@@ -60,15 +73,19 @@ fun RegisterScreen(
 
         Button(
             onClick = {
-                viewModel.register(name, email, password) {
-                    navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.Login.route) { inclusive = true }
-                    }
-                }
+                viewModel.register("USER", name, email, password)
             },
+            enabled = registerState !is RegisterState.Loading,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Register")
+            Text(if (registerState is RegisterState.Loading) "Registering..." else "Register")
+        }
+
+        if (registerState is RegisterState.Error) {
+            Text(
+                text = (registerState as RegisterState.Error).message,
+                color = MaterialTheme.colorScheme.error
+            )
         }
 
         TextButton(onClick = { navController.popBackStack() }) {

@@ -1,6 +1,5 @@
 package com.example.findjob.data.model
 
-data class AuthResponse(
-    val accessToken: String,
+data class RefreshTokenRequest(
     val refreshToken: String
-)
+) 

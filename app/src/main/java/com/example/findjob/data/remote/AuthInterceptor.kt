@@ -3,10 +3,13 @@ package com.example.findjob.data.remote
 import com.example.findjob.utils.TokenManager
 import okhttp3.Interceptor
 import okhttp3.Response
+import javax.inject.Inject
 // tự động gắn access token vào mỗi request.
 
 // tạo một Interceptor tùy chỉnh bằng cách implement interface Interceptor của OkHttp.
-class AuthInterceptor : Interceptor {
+class AuthInterceptor @Inject constructor(
+    private val tokenManager: TokenManager
+) : Interceptor {
 
     /**
      * Đây là hàm bắt buộc phải override. Mỗi khi một request được gửi, hàm này sẽ được
@@ -21,7 +24,7 @@ class AuthInterceptor : Interceptor {
          * Nếu accessToken không null, thì:
          * → thêm header: Authorization: Bearer abc123xyz
          */
-        TokenManager.accessToken?.let {
+        tokenManager.getAccessToken()?.let {
             requestBuilder.addHeader("Authorization", "Bearer $it")
         }
 

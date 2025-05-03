@@ -2,6 +2,7 @@ package com.example.findjob.di
 
 import com.example.findjob.data.remote.AuthApi
 import com.example.findjob.data.repository.AuthRepository
+import com.example.findjob.utils.TokenManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -21,7 +22,10 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideAuthRepository(api: AuthApi): AuthRepository {
-        return AuthRepository(api)
+    fun provideAuthRepository(
+        api: AuthApi,
+        tokenManager: TokenManager
+    ): AuthRepository {
+        return AuthRepository(api, tokenManager)
     }
 }

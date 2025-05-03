@@ -15,18 +15,18 @@ class AuthRepository @Inject constructor(
     private val api: AuthApi,
     private val tokenManager: TokenManager
 ) {
-    suspend fun login(email: String, password: String): Result<AuthResponse> {
+    suspend fun login(username: String, password: String): Result<AuthResponse> {
         return try {
-            val response = api.login(LoginRequest(email, password))
+            val response = api.login(LoginRequest(username, password))
             handleAuthResponse(response)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    suspend fun register(role: String, name: String, email: String, password: String): Result<AuthResponse> {
+    suspend fun register(role: String,username: String, email: String, password: String): Result<AuthResponse> {
         return try {
-            val response = api.register(RegisterRequest(role, name, email, password))
+            val response = api.register(RegisterRequest(role,username, email, password))
             handleAuthResponse(response)
         } catch (e: Exception) {
             Result.failure(e)
@@ -46,8 +46,10 @@ class AuthRepository @Inject constructor(
         return if (response.isSuccessful) {
             val authResponse = response.body()?.data
             if (authResponse != null) {
-                tokenManager.accessToken = authResponse.token
-                tokenManager.refreshToken = authResponse.refreshToken
+                tokenManager.saveTokens(
+                    accessToken = authResponse.accessToken,
+                    refreshToken = authResponse.refreshToken
+                )
                 Result.success(authResponse)
             } else {
                 Result.failure(Exception("Invalid response format"))
