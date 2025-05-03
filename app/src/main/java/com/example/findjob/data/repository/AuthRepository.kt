@@ -4,7 +4,7 @@ import com.example.findjob.data.model.AuthResponse
 import com.example.findjob.data.model.LoginRequest
 import com.example.findjob.data.model.RegisterRequest
 import com.example.findjob.data.model.RestResponse
-import com.example.findjob.data.remote.AuthApi
+import com.example.findjob.data.remote.api.AuthApi
 import com.example.findjob.utils.TokenManager
 import retrofit2.Response
 import javax.inject.Inject
@@ -24,18 +24,9 @@ class AuthRepository @Inject constructor(
         }
     }
 
-    suspend fun register(role: String,username: String, email: String, password: String): Result<AuthResponse> {
+    suspend fun register(role: String, username: String, email: String, password: String): Result<AuthResponse> {
         return try {
-            val response = api.register(RegisterRequest(role,username, email, password))
-            handleAuthResponse(response)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    suspend fun refreshToken(): Result<AuthResponse> {
-        return try {
-            val response = api.refreshToken()
+            val response = api.register(RegisterRequest(role, username, email, password))
             handleAuthResponse(response)
         } catch (e: Exception) {
             Result.failure(e)
@@ -46,10 +37,7 @@ class AuthRepository @Inject constructor(
         return if (response.isSuccessful) {
             val authResponse = response.body()?.data
             if (authResponse != null) {
-                tokenManager.saveTokens(
-                    accessToken = authResponse.accessToken,
-                    refreshToken = authResponse.refreshToken
-                )
+                tokenManager.saveTokens(accessToken = authResponse.accessToken)
                 Result.success(authResponse)
             } else {
                 Result.failure(Exception("Invalid response format"))

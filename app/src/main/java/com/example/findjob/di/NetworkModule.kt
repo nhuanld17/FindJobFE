@@ -1,12 +1,10 @@
 package com.example.findjob.di
 
-import com.example.findjob.data.remote.AuthInterceptor
-import com.example.findjob.data.remote.TokenAuthenticator
+import com.example.findjob.data.remote.api.AuthApi
+import com.example.findjob.data.remote.interceptor.AuthInterceptor
+import com.example.findjob.data.remote.interceptor.TokenAuthenticator
 import com.example.findjob.data.repository.AuthRepository
 import com.example.findjob.utils.TokenManager
-import com.example.findjob.data.remote.ApiService
-import com.example.findjob.data.remote.TokenRefreshService
-import com.example.findjob.data.remote.TokenRefreshServiceImpl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -53,14 +51,8 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideApiService(retrofit: Retrofit): ApiService {
-        return retrofit.create(ApiService::class.java)
-    }
-
-    @Provides
-    @Singleton
-    fun provideTokenRefreshService(apiService: ApiService, tokenManager: TokenManager): TokenRefreshService {
-        return TokenRefreshServiceImpl(apiService, tokenManager)
+    fun provideAuthApi(retrofit: Retrofit): AuthApi {
+        return retrofit.create(AuthApi::class.java)
     }
 
     @Provides
