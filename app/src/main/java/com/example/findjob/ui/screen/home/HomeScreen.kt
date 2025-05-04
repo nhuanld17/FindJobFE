@@ -13,7 +13,7 @@ import com.example.findjob.viewmodel.HomeViewModel
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel()
 ) {
-    val accessToken = remember { viewModel.tokenManager.getAccessToken() } ?: "No Access Token"
+    val accessToken = remember { viewModel.infoManager.getAccessToken() } ?: "No Access Token"
 
     Column(
         modifier = Modifier
@@ -31,5 +31,29 @@ fun HomeScreen(
             accessToken.take(60),
             style = MaterialTheme.typography.bodyMedium
         )
+
+        Spacer(modifier = Modifier.height(8.dp))
+        viewModel.infoManager.getName()?.let {
+            Text(
+                it,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+        viewModel.infoManager.getEmail()?.let {
+            Text(
+                it,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+        viewModel.infoManager.getAccessToken()?.let {
+            Text(
+                it,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
     }
 }

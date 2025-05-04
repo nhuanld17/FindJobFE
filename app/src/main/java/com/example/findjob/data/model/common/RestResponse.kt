@@ -1,4 +1,4 @@
-package com.example.findjob.data.model
+package com.example.findjob.data.model.common
 
 data class RestResponse<T>(
     val statusCode: Int,

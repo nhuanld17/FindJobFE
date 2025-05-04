@@ -1,6 +1,6 @@
 package com.example.findjob.data.remote.interceptor
 
-import com.example.findjob.utils.TokenManager
+import com.example.findjob.utils.InfoManager
 import okhttp3.Interceptor
 import okhttp3.Response
 import javax.inject.Inject
@@ -19,7 +19,7 @@ import javax.inject.Inject
  * chặn và sửa request trước khi gửi đi.
  */
 class AuthInterceptor @Inject constructor(
-    private val tokenManager: TokenManager
+    private val infoManager: InfoManager
 ) : Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {
@@ -29,7 +29,7 @@ class AuthInterceptor @Inject constructor(
 
         // Lấy access token từ TokenManager: nếu có token, thì tiếp tục
         // thêm token vào header: Authorization: Bearer <access_token>
-        tokenManager.getAccessToken()?.let {
+        infoManager.getAccessToken()?.let {
             requestBuilder.addHeader("Authorization", "Bearer $it")
         }
 

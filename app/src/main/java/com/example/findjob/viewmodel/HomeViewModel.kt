@@ -1,15 +1,15 @@
 package com.example.findjob.viewmodel
 
 import androidx.lifecycle.ViewModel
-import com.example.findjob.utils.TokenManager
+import com.example.findjob.utils.InfoManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    val tokenManager: TokenManager
+    val infoManager: InfoManager
 ) : ViewModel() {
     fun logout() {
-        tokenManager.clearTokens()
+        infoManager.clearTokens()
     }
 } 

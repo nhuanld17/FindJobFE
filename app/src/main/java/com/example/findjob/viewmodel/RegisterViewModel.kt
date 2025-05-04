@@ -2,9 +2,7 @@ package com.example.findjob.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.findjob.data.model.AuthResponse
 import com.example.findjob.data.repository.AuthRepository
-import com.example.findjob.utils.TokenManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,31 +10,38 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-@HiltViewModel
-class RegisterViewModel @Inject constructor(
-    private val repository: AuthRepository
-) : ViewModel() {
-
-    private val _registerState = MutableStateFlow<RegisterState>(RegisterState.Idle)
-    val registerState: StateFlow<RegisterState> = _registerState.asStateFlow()
-
-    fun register(role: String,username: String, email: String, password: String) {
-        viewModelScope.launch {
-            _registerState.value = RegisterState.Loading
-            repository.register(role,username, email, password)
-                .onSuccess { authResponse ->
-                    _registerState.value = RegisterState.Success(authResponse)
-                }
-                .onFailure { error ->
-                    _registerState.value = RegisterState.Error(error.message ?: "Unknown error")
-                }
-        }
-    }
+sealed class RegisterUiState {
+    object Initial : RegisterUiState()
+    object Loading : RegisterUiState()
+    object Success : RegisterUiState()
+    data class Error(val message: String) : RegisterUiState()
 }
 
-sealed class RegisterState {
-    object Idle : RegisterState()
-    object Loading : RegisterState()
-    data class Success(val authResponse: AuthResponse) : RegisterState()
-    data class Error(val message: String) : RegisterState()
+@HiltViewModel
+class RegisterViewModel @Inject constructor(
+    private val authRepository: AuthRepository
+) : ViewModel() {
+
+    private val _uiState = MutableStateFlow<RegisterUiState>(RegisterUiState.Initial)
+    val uiState: StateFlow<RegisterUiState> = _uiState.asStateFlow()
+
+    fun register(role: String, username: String, email: String, password: String) {
+        viewModelScope.launch {
+            _uiState.value = RegisterUiState.Loading
+            try {
+                val result = authRepository.register(role, username, email, password)
+                _uiState.value = if (result.isSuccess) {
+                    RegisterUiState.Success
+                } else {
+                    RegisterUiState.Error(result.exceptionOrNull()?.message ?: "Unknown error")
+                }
+            } catch (e: Exception) {
+                _uiState.value = RegisterUiState.Error(e.message ?: "Unknown error")
+            }
+        }
+    }
+
+    fun resetState() {
+        _uiState.value = RegisterUiState.Initial
+    }
 }

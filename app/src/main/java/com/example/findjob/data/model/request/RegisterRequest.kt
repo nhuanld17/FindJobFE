@@ -1,4 +1,4 @@
-package com.example.findjob.data.model
+package com.example.findjob.data.model.request
 
 data class RegisterRequest(
     val role: String,

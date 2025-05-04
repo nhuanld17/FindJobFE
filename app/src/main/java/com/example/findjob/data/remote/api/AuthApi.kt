@@ -1,9 +1,9 @@
 package com.example.findjob.data.remote.api
 
-import com.example.findjob.data.model.AuthResponse
-import com.example.findjob.data.model.LoginRequest
-import com.example.findjob.data.model.RegisterRequest
-import com.example.findjob.data.model.RestResponse
+import com.example.findjob.data.model.response.AuthResponse
+import com.example.findjob.data.model.request.LoginRequest
+import com.example.findjob.data.model.request.RegisterRequest
+import com.example.findjob.data.model.common.RestResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.POST

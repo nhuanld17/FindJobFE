@@ -16,6 +16,11 @@ import com.example.findjob.navigation.AppNavGraph
 import com.example.findjob.ui.theme.FindJobTheme
 import dagger.hilt.android.AndroidEntryPoint
 
+/**
+ * @AndroidEntryPoint: Cho phép Hilt inject các dependency vào Activity này
+ * - Nếu bạn có một ViewModel dùng @Inject constructor, thì Hilt sẽ tạo và
+ * cấp ViewModel cho bạn.
+ */
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

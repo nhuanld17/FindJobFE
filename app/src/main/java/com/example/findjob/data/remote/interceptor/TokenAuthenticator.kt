@@ -1,6 +1,6 @@
 package com.example.findjob.data.remote.interceptor
 
-import com.example.findjob.utils.TokenManager
+import com.example.findjob.utils.InfoManager
 import okhttp3.Authenticator
 import okhttp3.Request
 import okhttp3.Response
@@ -19,7 +19,7 @@ import javax.inject.Inject
 // TokenManager: dùng để lưu hoặc lấy token cũ/mới.
 // : Authenticator: đây là class đặc biệt của OkHttp cho việc retry khi bị 401 (token hết hạn).
 class TokenAuthenticator @Inject constructor(
-    private val tokenManager: TokenManager
+    private val infoManager: InfoManager
 ) : Authenticator {
 
     // Khi server trả về lỗi 401 Unauthorized, OkHttp sẽ gọi hàm này.
