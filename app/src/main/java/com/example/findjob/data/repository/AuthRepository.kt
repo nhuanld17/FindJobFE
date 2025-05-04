@@ -1,55 +1,72 @@
 package com.example.findjob.data.repository
 
-import com.example.findjob.data.model.AuthResponse
-import com.example.findjob.data.model.LoginRequest
-import com.example.findjob.data.model.RegisterRequest
-import com.example.findjob.data.model.RestResponse
-import com.example.findjob.data.remote.AuthApi
-import com.example.findjob.utils.TokenManager
+import com.example.findjob.data.model.common.RestResponse
+import com.example.findjob.data.model.request.LoginRequest
+import com.example.findjob.data.model.request.RegisterRequest
+import com.example.findjob.data.model.response.AuthResponse
+import com.example.findjob.data.remote.api.AuthApi
+import com.example.findjob.utils.InfoManager
 import retrofit2.Response
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/**
+ * - AuthRepository là lớp trung gian nằm giữa UI (ViewModel) và API
+ * - Vai trò chính của AuthRepository:
+ * + Gửi yêu cầu đăng nhập/đăng ký tới API
+ * + Xử lý response từ server
+ * + Nếu thành công → lưu accessToken bằng TokenManager
+ * + Trả Result<AuthResponse> về ViewModel để xử lý tiếp (hiển thị UI, điều hướng, v.v.)
+ */
+
+/**
+ * @Inject constructor(...): Cho phép Hilt tự tạo AuthRepository, inject các tham số api
+ * và tokenManager.
+ * @Singleton: Chỉ tạo 1 lần duy nhất trong suốt vòng đời app
+ * api: Giao tiếp với server qua Retrofit
+ * tokenManager: Lưu accessToken, thường dùng SharedPreferences hoặc DataStore
+ */
 @Singleton
 class AuthRepository @Inject constructor(
     private val api: AuthApi,
-    private val tokenManager: TokenManager
+    private val infoManager: InfoManager
 ) {
+    /**
+     * - Tạo 1 object LoginRequest chứa username và password
+     * - Gửi đến api.login(...)
+     * - Nếu thành công → truyền response vào handleLoginResponse(...)
+     * - Nếu lỗi mạng hoặc crash → return Result.failure(...)
+     * - suspend → là function bất đồng bộ (dùng trong Coroutine)
+     */
     suspend fun login(username: String, password: String): Result<AuthResponse> {
         return try {
             val response = api.login(LoginRequest(username, password))
-            handleAuthResponse(response)
+            handleLoginResponse(response)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    suspend fun register(role: String,username: String, email: String, password: String): Result<AuthResponse> {
+    suspend fun register(role: String, username: String, email: String, password: String): Result<Unit> {
         return try {
-            val response = api.register(RegisterRequest(role,username, email, password))
-            handleAuthResponse(response)
+            val response = api.register(RegisterRequest(role, username, email, password))
+            if (response.isSuccessful) {
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("Registration failed: ${response.code()}"))
+            }
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    suspend fun refreshToken(): Result<AuthResponse> {
-        return try {
-            val response = api.refreshToken()
-            handleAuthResponse(response)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    private fun handleAuthResponse(response: Response<RestResponse<AuthResponse>>): Result<AuthResponse> {
+    //  Xử lý response cho login, lưu token sau khi login thành công
+    private fun handleLoginResponse(response: Response<RestResponse<AuthResponse>>): Result<AuthResponse> {
+        // Nếu status code là 200-299 thì ok
         return if (response.isSuccessful) {
             val authResponse = response.body()?.data
             if (authResponse != null) {
-                tokenManager.saveTokens(
-                    accessToken = authResponse.accessToken,
-                    refreshToken = authResponse.refreshToken
-                )
+                infoManager.saveInfo(authResponse = authResponse)
                 Result.success(authResponse)
             } else {
                 Result.failure(Exception("Invalid response format"))

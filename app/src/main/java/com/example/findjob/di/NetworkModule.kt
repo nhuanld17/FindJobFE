@@ -1,12 +1,9 @@
 package com.example.findjob.di
 
-import com.example.findjob.data.remote.AuthInterceptor
-import com.example.findjob.data.remote.TokenAuthenticator
-import com.example.findjob.data.repository.AuthRepository
-import com.example.findjob.utils.TokenManager
-import com.example.findjob.data.remote.ApiService
-import com.example.findjob.data.remote.TokenRefreshService
-import com.example.findjob.data.remote.TokenRefreshServiceImpl
+import com.example.findjob.data.remote.api.AuthApi
+import com.example.findjob.data.remote.interceptor.AuthInterceptor
+import com.example.findjob.data.remote.interceptor.TokenAuthenticator
+import com.example.findjob.utils.InfoManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -18,11 +15,29 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
+/**
+ * Nơi cấu hình Retrofit, OkHttp, và các thành phần cần thiết để gọi API trong ứng dụng
+ * Android.
+ * @Module: Đánh dấu đây là nơi cung cấp các dependency
+ * @InstallIn(SingletonComponent::class): Các dependency sống suốt vòng đời của app
+ * object: Dùng object thay vì class vì ta không cần nhiều instance
+ */
+
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
-    private const val BASE_URL = "http://10.0.2.2:8080/api/" // For Android emulator to access localhost
 
+    // Địa chỉ server (dùng 10.0.2.2 thay vì localhost để Android Emulator
+    // truy cập máy tính của bạn)
+    private const val BASE_URL = "http://192.168.1.6:8080/api/"
+
+    /**
+     * Dùng để ghi log request & response khi bạn gọi API.
+     * Tạo interceptor để ghi lại toàn bộ thông tin request/response
+     * Level.BODY: Ghi cả header và body của request/response
+     */
+    // @Provides: Hilt sẽ gọi hàm này để tạo HttpLoggingInterceptor.
+    // @Singleton: Tạo 1 lần duy nhất cho toàn app.
     @Provides
     @Singleton
     fun provideLoggingInterceptor(): HttpLoggingInterceptor {
@@ -31,16 +46,25 @@ object NetworkModule {
         }
     }
 
+    /**
+     * @Provides: Hilt sẽ gọi hàm này để tạo AuthInterceptor.
+     * @Singleton: Tạo 1 lần duy nhất cho toàn app.
+     */
     @Provides
     @Singleton
-    fun provideAuthInterceptor(tokenManager: TokenManager): AuthInterceptor = AuthInterceptor(tokenManager)
+    fun provideAuthInterceptor(infoManager: InfoManager): AuthInterceptor = AuthInterceptor(infoManager)
 
     @Provides
     @Singleton
-    fun provideTokenAuthenticator(tokenManager: TokenManager): TokenAuthenticator {
-        return TokenAuthenticator(tokenManager)
+    fun provideTokenAuthenticator(infoManager: InfoManager): TokenAuthenticator {
+        return TokenAuthenticator(infoManager)
     }
 
+    /**
+     * Retrofit – Thư viện gọi API
+     * BASE_URL: là địa chỉ API gốc (ở đây là máy chủ backend chạy trên máy thật).
+     * addConverterFactory(...): giúp Retrofit hiểu dữ liệu JSON.
+     */
     @Provides
     @Singleton
     fun provideRetrofit(client: OkHttpClient): Retrofit {
@@ -53,16 +77,17 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideApiService(retrofit: Retrofit): ApiService {
-        return retrofit.create(ApiService::class.java)
+    fun provideAuthApi(retrofit: Retrofit): AuthApi {
+        return retrofit.create(AuthApi::class.java)
     }
 
-    @Provides
-    @Singleton
-    fun provideTokenRefreshService(apiService: ApiService, tokenManager: TokenManager): TokenRefreshService {
-        return TokenRefreshServiceImpl(apiService, tokenManager)
-    }
-
+    /**
+     * OkHttpClient – Cấu hình client mạng tổng thể
+     * - addInterceptor(logging): In log JSON request/response
+     * - addInterceptor(authInterceptor): Gắn access token vào header
+     * - authenticator(tokenAuthenticator): Lỗi token hết hạn thì yêu cầu đăng nhập lại
+     * - timeout: Cài thời gian chờ (30 giây) cho các loại kết nối
+     */
     @Provides
     @Singleton
     fun provideOkHttpClient(
