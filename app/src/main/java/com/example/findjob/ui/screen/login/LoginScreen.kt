@@ -62,6 +62,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.findjob.navigation.Screen
+import com.example.findjob.utils.InfoManager
 import com.example.findjob.viewmodel.LoginState
 import com.example.findjob.viewmodel.LoginViewModel
 
@@ -75,9 +76,16 @@ fun LoginScreen(navController: NavController, viewModel: LoginViewModel = hiltVi
 
     LaunchedEffect(loginState) {
         when (loginState) {
+            // Nếu đăng nhập thành công thì kiểm tra role để điều hướng tới
+            // màn hình tương ứng
             is LoginState.Success -> {
-                navController.navigate(Screen.Home.route) {
-                    popUpTo(Screen.Login.route) { inclusive = true }
+                val role = viewModel.infoManager.getRole();
+                if (role == "ROLE_EMPLOYEE") {
+                    navController.navigate(Screen.EmployeeHome.route)
+                }
+
+                if (role == "ROLE_RECRUITER") {
+                    navController.navigate(Screen.RecruiterHome.route)
                 }
             }
             else -> {}

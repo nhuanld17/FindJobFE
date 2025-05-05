@@ -7,10 +7,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import com.example.findjob.viewmodel.HomeViewModel
 
 @Composable
-fun HomeScreen(
+fun EmployeeHomeScreen(
+    navController: NavController,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val accessToken = remember { viewModel.infoManager.getAccessToken() } ?: "No Access Token"
@@ -49,7 +51,7 @@ fun HomeScreen(
         }
 
         Spacer(modifier = Modifier.height(8.dp))
-        viewModel.infoManager.getAccessToken()?.let {
+        viewModel.infoManager.getRole()?.let {
             Text(
                 it,
                 style = MaterialTheme.typography.bodyMedium
