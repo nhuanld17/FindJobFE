@@ -47,13 +47,13 @@ class AuthRepository @Inject constructor(
         }
     }
 
-    suspend fun register(role: String, username: String, email: String, password: String): Result<Unit> {
+    suspend fun register(role: String, name: String, email: String, password: String): Result<Unit> {
         return try {
-            val response = api.register(RegisterRequest(role, username, email, password))
+            val response = api.register(RegisterRequest(role, name, email, password))
             if (response.isSuccessful) {
                 Result.success(Unit)
             } else {
-                Result.failure(Exception("Registration failed: ${response.code()}"))
+                Result.failure(Exception("Registration failed: ${response.errorBody()}"))
             }
         } catch (e: Exception) {
             Result.failure(e)

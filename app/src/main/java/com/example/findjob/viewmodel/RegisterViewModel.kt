@@ -25,11 +25,11 @@ class RegisterViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<RegisterUiState>(RegisterUiState.Initial)
     val uiState: StateFlow<RegisterUiState> = _uiState.asStateFlow()
 
-    fun register(role: String, username: String, email: String, password: String) {
+    fun register(role: String, name: String, email: String, password: String) {
         viewModelScope.launch {
             _uiState.value = RegisterUiState.Loading
             try {
-                val result = authRepository.register(role, username, email, password)
+                val result = authRepository.register(role, name, email, password)
                 _uiState.value = if (result.isSuccess) {
                     RegisterUiState.Success
                 } else {
