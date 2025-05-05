@@ -6,6 +6,7 @@ import com.example.findjob.data.model.request.RegisterRequest
 import com.example.findjob.data.model.response.AuthResponse
 import com.example.findjob.data.remote.api.AuthApi
 import com.example.findjob.utils.InfoManager
+import com.google.gson.Gson
 import retrofit2.Response
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -31,6 +32,18 @@ class AuthRepository @Inject constructor(
     private val api: AuthApi,
     private val infoManager: InfoManager
 ) {
+    private val gson = Gson()
+
+    private fun parseErrorMessage(errorBody: String?): String {
+        return try {
+            if (errorBody == null) return "Unknown error"
+            val errorResponse = gson.fromJson(errorBody, RestResponse::class.java)
+            errorResponse.message ?: "Unknown error"
+        } catch (e: Exception) {
+            "Unknown error"
+        }
+    }
+
     /**
      * - Tạo 1 object LoginRequest chứa username và password
      * - Gửi đến api.login(...)
@@ -51,9 +64,15 @@ class AuthRepository @Inject constructor(
         return try {
             val response = api.register(RegisterRequest(role, name, email, password))
             if (response.isSuccessful) {
-                Result.success(Unit)
+                val responseBody = response.body()
+                if (responseBody?.statusCode in 200..299) {
+                    Result.success(Unit)
+                } else {
+                    Result.failure(Exception(responseBody?.message ?: "Registration failed"))
+                }
             } else {
-                Result.failure(Exception("Registration failed: ${response.errorBody()}"))
+                val errorMessage = parseErrorMessage(response.errorBody()?.string())
+                Result.failure(Exception(errorMessage))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -72,7 +91,8 @@ class AuthRepository @Inject constructor(
                 Result.failure(Exception("Invalid response format"))
             }
         } else {
-            Result.failure(Exception("Authentication failed: ${response.code()}"))
+            val errorMessage = parseErrorMessage(response.errorBody()?.string())
+            Result.failure(Exception(errorMessage))
         }
     }
 }
