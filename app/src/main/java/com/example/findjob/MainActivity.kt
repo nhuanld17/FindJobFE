@@ -14,7 +14,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
 import com.example.findjob.navigation.AppNavGraph
 import com.example.findjob.ui.theme.FindJobTheme
+import com.example.findjob.utils.InfoManager
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 /**
  * @AndroidEntryPoint: Cho phép Hilt inject các dependency vào Activity này
@@ -23,13 +25,16 @@ import dagger.hilt.android.AndroidEntryPoint
  */
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    @Inject
+    lateinit var infoManager: InfoManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             FindJobTheme {
                 val navController = rememberNavController()
-                AppNavGraph(navController)
+                AppNavGraph(navController = navController, infoManager = infoManager)
             }
         }
     }

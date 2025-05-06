@@ -38,12 +38,16 @@ class InfoManager @Inject constructor(
 
     companion object {
         private const val TAG = "TokenManager"
+        private const val TOKEN_EXPIRATION_TIME = 86400L // 24 hours in seconds
     }
 
     // Hàm lưu token
     fun saveInfo(authResponse: AuthResponse) {
         // Ghi log (logcat) 10 ký tự đầu tiên của token để tiện debug.
         Log.d(TAG, "Setting access token: ${authResponse.token.take(10)}...")
+
+        // Calculate token expiration time (current time + 24 hours)
+        val expirationTime = System.currentTimeMillis() + (TOKEN_EXPIRATION_TIME * 1000)
 
         // Dùng putString(...) để lưu token vào SharedPreferences.
         // Gọi apply() để lưu bất đồng bộ (nhanh, không block UI).
@@ -52,12 +56,14 @@ class InfoManager @Inject constructor(
             .putString("name", authResponse.name)
             .putString("role", authResponse.role)
             .putString("access_token", authResponse.token)
+            .putLong("token_expiration", expirationTime)
             .apply()
             
         // Verify token was saved
         val savedToken = getAccessToken()
         Log.d(TAG, "Token saved successfully: ${savedToken != null}")
         Log.d(TAG, "Saved token length: ${savedToken?.length}")
+        Log.d(TAG, "Token will expire at: ${java.util.Date(expirationTime)}")
     }
 
     // Trả về token nếu có, hoặc null nếu chưa từng lưu.
@@ -74,14 +80,58 @@ class InfoManager @Inject constructor(
 
     // Xoá toàn bộ key–value trong auth_prefs
     fun clearTokens() {
-        Log.d(TAG, "Clearing tokens")
+        Log.d(TAG, "Clearing all user information")
         sharedPreferences.edit()
             .remove("access_token")
+            .remove("token_expiration")
+            .remove("email")
+            .remove("name")
+            .remove("role")
             .apply()
     }
 
     // Kiểm tra token hợp lệ: Trả về true nếu token không rỗng → tức là user đã login thành công.
     fun isLoggedIn(): Boolean {
-        return !getAccessToken().isNullOrEmpty()
+        val token = getAccessToken()
+        val expirationTime = sharedPreferences.getLong("token_expiration", 0)
+        val currentTime = System.currentTimeMillis()
+        
+        return !token.isNullOrEmpty() && currentTime < expirationTime
+    }
+
+    fun isTokenExpired(): Boolean {
+        val expirationTime = sharedPreferences.getLong("token_expiration", 0)
+        val currentTime = System.currentTimeMillis()
+        return currentTime >= expirationTime
+    }
+
+    /**
+     * Kiểm tra trạng thái đăng nhập và role của người dùng
+     * @return LoginStatus: NOT_LOGGED_IN, EMPLOYEE, RECRUITER
+     */
+    fun checkLoginStatus(): LoginStatus {
+        if (!isLoggedIn()) {
+            Log.d(TAG, "User is not logged in")
+            return LoginStatus.NOT_LOGGED_IN
+        }
+
+        val role = getRole()
+        Log.d(TAG, "User is logged in with role: $role")
+        
+        return when (role?.uppercase()) {
+            "EMPLOYEE" -> LoginStatus.EMPLOYEE
+            "RECRUITER" -> LoginStatus.RECRUITER
+            else -> {
+                Log.e(TAG, "Invalid role: $role")
+                clearTokens() // Clear invalid data
+                LoginStatus.NOT_LOGGED_IN
+            }
+        }
+    }
+
+    enum class LoginStatus {
+        NOT_LOGGED_IN,
+        EMPLOYEE,
+        RECRUITER
     }
 }

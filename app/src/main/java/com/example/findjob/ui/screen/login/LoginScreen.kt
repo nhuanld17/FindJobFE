@@ -1,198 +1,149 @@
 package com.example.findjob.ui.screen.login
 
-//@Composable
-//fun LoginScreen(navController: NavController, viewModel: LoginViewModel = hiltViewModel()) {
-//    var email by remember { mutableStateOf("") }
-//    var password by remember { mutableStateOf("") }
-//    val loginState by viewModel.loginState.collectAsState()
-//
-//    LaunchedEffect(loginState) {
-//        when (loginState) {
-//            is LoginState.Success -> {
-//                navController.navigate(Screen.Home.route) {
-//                    popUpTo(Screen.Login.route) { inclusive = true }
-//                }
-//            }
-//            else -> {}
-//        }
-//    }
-//
-//    Column(modifier = Modifier.padding(16.dp)) {
-//        TextField(value = email, onValueChange = { email = it }, label = { Text("Email") })
-//        Spacer(modifier = Modifier.height(8.dp))
-//        TextField(value = password, onValueChange = { password = it }, label = { Text("Password") })
-//        Spacer(modifier = Modifier.height(16.dp))
-//        Button(
-//            onClick = { viewModel.login(email, password) },
-//            enabled = loginState !is LoginState.Loading
-//        ) {
-//            Text(if (loginState is LoginState.Loading) "Logging in..." else "Login")
-//        }
-//        if (loginState is LoginState.Error) {
-//            Text(
-//                text = (loginState as LoginState.Error).message,
-//                color = MaterialTheme.colorScheme.error
-//            )
-//        }
-//        TextButton(onClick = { navController.navigate(Screen.Register.route) }) {
-//            Text("Don't have an account? Register")
-//        }
-//    }
-//}
-
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.findjob.navigation.Screen
+import com.example.findjob.utils.InfoManager
 import com.example.findjob.viewmodel.LoginState
 import com.example.findjob.viewmodel.LoginViewModel
+import kotlinx.coroutines.delay
 
 @Composable
-fun LoginScreen(navController: NavController, viewModel: LoginViewModel = hiltViewModel()) {
+fun LoginScreen(
+    navController: NavController,
+    viewModel: LoginViewModel = hiltViewModel()
+) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var showError by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
     val loginState by viewModel.loginState.collectAsState()
 
-    val keyboardController = LocalSoftwareKeyboardController.current
+    // Handle error message timeout
+    LaunchedEffect(showError) {
+        if (showError) {
+            delay(2000)
+            showError = false
+        }
+    }
 
     LaunchedEffect(loginState) {
         when (loginState) {
             is LoginState.Success -> {
-                navController.navigate(Screen.Home.route) {
-                    popUpTo(Screen.Login.route) { inclusive = true }
+                // Get user role and navigate accordingly
+                val role = viewModel.infoManager.getRole()
+                when (role) {
+                    "ROLE_EMPLOYEE" -> {
+                        navController.navigate("employeeHome") {
+                            popUpTo("employeeHome") { inclusive = true }
+                        }
+                    }
+                    "ROLE_RECRUITER" -> {
+                        navController.navigate("recruiterHome") {
+                            popUpTo("recruiterHome") { inclusive = true }
+                        }
+                    }
                 }
+            }
+            is LoginState.Error -> {
+                errorMessage = (loginState as LoginState.Error).message
+                showError = true
             }
             else -> {}
         }
     }
 
-    Column(
+    Surface(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
+            .padding(top = 100.dp, bottom = 100.dp),
+        color = Color.White
     ) {
         Column(
             modifier = Modifier
-                .clip(RoundedCornerShape(30.dp))
-                .fillMaxWidth()
-                .weight(1f)
-                .background(Color.White)
-                .padding(horizontal = 29.dp)
-                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp)
+                .fillMaxWidth(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                "Welcome Back",
-                color = Color(0xFF0D0140),
-                fontSize = 40.sp, // Tăng tiêu đề
+                text = "Welcome Back",
+                style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(top = 102.dp, bottom = 30.dp)
+                color = Color(0xFF1A1330),
+                modifier = Modifier.padding(bottom = 24.dp)
             )
 
-            // EMAIL
-            Column(
-                modifier = Modifier
-                    .padding(bottom = 20.dp)
-                    .fillMaxWidth()
-            ) {
+            // Email Field
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Email") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Password Field
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Password") },
+                visualTransformation = PasswordVisualTransformation(),
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Error Message
+            if (showError) {
                 Text(
-                    "Email",
-                    color = Color(0xFF0D0140),
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(bottom = 12.dp, start = 3.dp)
-                )
-                OutlinedTextField(
-                    value = email,
-                    onValueChange = { email = it },
-                    placeholder = {
-                        Text("Enter your email", fontSize = 20.sp) // Placeholder to
-                    },
-                    singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
-                    textStyle = TextStyle(fontSize = 22.sp), // Font người dùng nhập
-                    colors = TextFieldDefaults.colors(
-                        unfocusedContainerColor = Color.White,
-                        focusedContainerColor = Color.White,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        focusedIndicatorColor = Color.Transparent,
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(75.dp) // Tăng chiều cao tương ứng
-                        .border(
-                            width = 2.dp,
-                            color = if (email.isNotEmpty()) Color(0xFF130160) else Color(0xFFCCCCCC),
-                            shape = RoundedCornerShape(12.dp)
-                        )
+                    text = errorMessage,
+                    color = Color.Red,
+                    modifier = Modifier.padding(bottom = 16.dp)
                 )
             }
 
-            // PASSWORD
-            Column(
-                modifier = Modifier
-                    .padding(bottom = 30.dp)
-                    .fillMaxWidth()
-            ) {
-                Text(
-                    "Password",
-                    color = Color(0xFF0D0140),
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(bottom = 12.dp, start = 3.dp)
-                )
-                OutlinedTextField(
-                    value = password,
-                    onValueChange = { password = it },
-                    placeholder = {
-                        Text("Enter your password", fontSize = 20.sp)
-                    },
-                    visualTransformation = PasswordVisualTransformation(),
-                    singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
-                    textStyle = TextStyle(fontSize = 22.sp),
-                    colors = TextFieldDefaults.colors(
-                        unfocusedContainerColor = Color.White,
-                        focusedContainerColor = Color.White,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        focusedIndicatorColor = Color.Transparent,
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(75.dp)
-                        .border(
-                            width = 2.dp,
-                            color = if (password.isNotEmpty()) Color(0xFF130160) else Color(0xFFCCCCCC),
-                            shape = RoundedCornerShape(12.dp)
-                        )
-                )
-
-            }
-
-            // LOGIN BUTTON
+            // Sign In Button
             OutlinedButton(
-            onClick = {
-                viewModel.login(email, password)
-                keyboardController?.hide()
-                      },
-            enabled = loginState !is LoginState.Loading,
+                onClick = { viewModel.login(email, password) },
+                enabled = loginState !is LoginState.Loading,
                 border = BorderStroke(0.dp, Color.Transparent),
                 colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.Transparent),
                 contentPadding = PaddingValues(),
@@ -202,7 +153,7 @@ fun LoginScreen(navController: NavController, viewModel: LoginViewModel = hiltVi
                     .background(Color(0xFF130160))
             ) {
                 Text(
-                    "Login",
+                    if (loginState is LoginState.Loading) "Signing in..." else "Sign In",
                     color = Color.White,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
@@ -211,21 +162,19 @@ fun LoginScreen(navController: NavController, viewModel: LoginViewModel = hiltVi
                 )
             }
 
-            TextButton(
-                onClick = { navController.navigate(Screen.Register.route) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 32.dp) // Đặt padding ở đây, không đặt trong Text
-            ) {
+            // Sign Up Text
+            Column {
+                Text(text = "Don't have an account? ")
                 Text(
-                    text = "Don't have an account? Register",
-                    color = Color(0xFF514A6B),
-                    fontSize = 16.sp,
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center // Cho đẹp, canh giữa
+                    text = "Sign up",
+                    color = Color.Black,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier
+                        .clickable(onClick = { navController.navigate("register") })
+                        .padding(start = 4.dp),
+                    textDecoration = TextDecoration.Underline
                 )
             }
-
         }
     }
 }
