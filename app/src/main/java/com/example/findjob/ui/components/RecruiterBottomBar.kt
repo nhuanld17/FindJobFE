@@ -27,12 +27,12 @@ sealed class RecruiterBottomNavItem(
         icon = Icons.Default.Home
     )
     object Jobs : RecruiterBottomNavItem(
-        route = "createJob",
+        route = "jobLists",
         title = "Post Job",
         icon = Icons.AutoMirrored.Filled.List
     )
     object CreateJob : RecruiterBottomNavItem(
-        route = "jobLists",
+        route = "createJob",
         title = "Company",
         icon = Icons.Default.Create
     )

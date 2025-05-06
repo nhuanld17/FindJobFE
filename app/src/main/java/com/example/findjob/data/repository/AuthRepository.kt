@@ -81,14 +81,20 @@ class AuthRepository @Inject constructor(
 
     //  Xử lý response cho login, lưu token sau khi login thành công
     private fun handleLoginResponse(response: Response<RestResponse<AuthResponse>>): Result<AuthResponse> {
-        // Nếu status code là 200-299 thì ok
         return if (response.isSuccessful) {
-            val authResponse = response.body()?.data
-            if (authResponse != null) {
-                infoManager.saveInfo(authResponse = authResponse)
-                Result.success(authResponse)
-            } else {
+            val responseBody = response.body()
+            if (responseBody == null) {
                 Result.failure(Exception("Invalid response format"))
+            } else if (responseBody.statusCode in 200..299) {
+                val authResponse = responseBody.data
+                if (authResponse != null) {
+                    infoManager.saveInfo(authResponse = authResponse)
+                    Result.success(authResponse)
+                } else {
+                    Result.failure(Exception("Invalid response format"))
+                }
+            } else {
+                Result.failure(Exception(responseBody.message ?: "Authentication failed"))
             }
         } else {
             val errorMessage = parseErrorMessage(response.errorBody()?.string())

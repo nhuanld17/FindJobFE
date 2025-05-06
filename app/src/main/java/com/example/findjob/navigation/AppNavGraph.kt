@@ -19,10 +19,19 @@ import com.example.findjob.ui.screen.recruiter.CreateJobScreen
 import com.example.findjob.ui.screen.recruiter.RecruiterJobListScreen
 import com.example.findjob.ui.screen.recruiter.RecruiterProfileScreen
 import com.example.findjob.ui.screen.register.RegisterScreen
+import com.example.findjob.ui.screen.splash.SplashScreen
+import com.example.findjob.utils.InfoManager
 
 @Composable
-fun AppNavGraph(navController: NavHostController) {
-    NavHost(navController, startDestination = "login") {
+fun AppNavGraph(
+    navController: NavHostController,
+    infoManager: InfoManager
+) {
+    NavHost(navController, startDestination = "splash") {
+        composable("splash") { 
+            SplashScreen(navController, infoManager)
+        }
+        
         composable("login") { LoginScreen(navController) }
         composable("register") { RegisterScreen(navController) }
 
