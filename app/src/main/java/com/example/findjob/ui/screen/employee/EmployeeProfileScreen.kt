@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -39,7 +40,13 @@ import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,16 +55,23 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.findjob.const.VietnamProvinces
 import com.example.findjob.ui.components.EmployeeBottomBar
+import com.example.findjob.viewmodel.EmployeeProfileViewModel
+import com.example.findjob.viewmodel.ProfileState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EmployeeProfileScreen(navController: NavController) {
+fun EmployeeProfileScreen(
+    navController: NavController,
+    viewModel: EmployeeProfileViewModel = hiltViewModel()
+) {
     // State lưu uri ảnh đại diện
     var avatarUri by remember { mutableStateOf<Uri?>(null) }
 
@@ -90,6 +104,48 @@ fun EmployeeProfileScreen(navController: NavController) {
     var location by remember { mutableStateOf("") }
     var expandedLocation by remember { mutableStateOf(false) }
     
+    // State cho các trường thông tin
+    var fullName by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var phoneNumber by remember { mutableStateOf("") }
+    var gender by remember { mutableStateOf("") }
+    
+    // State cho mật khẩu
+    var currentPassword by remember { mutableStateOf("") }
+    var newPassword by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
+
+    // Collect state từ ViewModel
+    val profileState by viewModel.state.collectAsState()
+
+    // Gọi API khi màn hình được tạo
+    LaunchedEffect(Unit) {
+        viewModel.getProfile()
+    }
+
+    // Xử lý state từ API
+    LaunchedEffect(profileState) {
+        when (profileState) {
+            is ProfileState.Success -> {
+                val profile = (profileState as ProfileState.Success).profile
+                fullName = profile.fullName ?: ""
+                email = profile.email ?: ""
+                phoneNumber = profile.phoneNumber ?: ""
+                gender = profile.gender ?: ""
+                location = profile.location ?: ""
+                
+                // Xử lý dateOfBirth an toàn hơn
+                profile.dateOfBirth?.let { dob ->
+                    day = dob.day?.toString() ?: ""
+                    month = dob.month?.toString() ?: ""
+                    year = dob.year?.toString() ?: ""
+                }
+            }
+            else -> {}
+        }
+    }
+
+    // Hàm validate date
     fun validateDate(d: String, m: String, y: String): Boolean {
         if (d.isEmpty() || m.isEmpty() || y.isEmpty()) return true
         
@@ -135,6 +191,33 @@ fun EmployeeProfileScreen(navController: NavController) {
                     shape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
                 )
         ) {}
+
+        // Hiển thị loading
+        if (profileState is ProfileState.Loading) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = Color.White)
+            }
+        }
+
+        // Hiển thị error
+        if (profileState is ProfileState.Error) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = (profileState as ProfileState.Error).message,
+                    color = Color.Red,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -215,8 +298,8 @@ fun EmployeeProfileScreen(navController: NavController) {
                     modifier = Modifier.padding(20.dp)
                 ) {
                     OutlinedTextField(
-                        value = "Brandone Louis",
-                        onValueChange = {},
+                        value = fullName,
+                        onValueChange = { fullName = it },
                         label = { Text("Fullname") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
@@ -300,7 +383,6 @@ fun EmployeeProfileScreen(navController: NavController) {
                     Spacer(modifier = Modifier.height(16.dp))
                     Text("Gender", fontWeight = FontWeight.Medium, fontSize = 14.sp)
                     Spacer(modifier = Modifier.height(8.dp))
-                    var gender by remember { mutableStateOf("Male") }
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -340,25 +422,20 @@ fun EmployeeProfileScreen(navController: NavController) {
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                     OutlinedTextField(
-                        value = "Brandonelouis@gmail.com",
-                        onValueChange = {},
+                        value = email,
+                        onValueChange = { email = it },
                         label = { Text("Email address") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
                     Spacer(modifier = Modifier.height(16.dp))
-                    Row(
+                    OutlinedTextField(
+                        value = phoneNumber,
+                        onValueChange = { phoneNumber = it },
                         modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        OutlinedTextField(
-                            value = "619 3456 7890",
-                            onValueChange = {},
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true,
-                            label = { Text("Phone number") }
-                        )
-                    }
+                        singleLine = true,
+                        label = { Text("Phone number") }
+                    )
                     Spacer(modifier = Modifier.height(16.dp))
                     ExposedDropdownMenuBox(
                         expanded = expandedLocation,
@@ -428,8 +505,8 @@ fun EmployeeProfileScreen(navController: NavController) {
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     OutlinedTextField(
-                        value = "Password",
-                        onValueChange = {},
+                        value = currentPassword,
+                        onValueChange = { currentPassword = it },
                         label = { Text("Current Password") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
@@ -443,8 +520,8 @@ fun EmployeeProfileScreen(navController: NavController) {
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     OutlinedTextField(
-                        value = "Password",
-                        onValueChange = {},
+                        value = newPassword,
+                        onValueChange = { newPassword = it },
                         label = { Text("New Password") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
@@ -458,8 +535,8 @@ fun EmployeeProfileScreen(navController: NavController) {
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     OutlinedTextField(
-                        value = "Password",
-                        onValueChange = {},
+                        value = confirmPassword,
+                        onValueChange = { confirmPassword = it },
                         label = { Text("Confirm New Password") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
