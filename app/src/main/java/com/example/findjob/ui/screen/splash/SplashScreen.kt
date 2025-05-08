@@ -4,8 +4,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.NavController
 import com.example.findjob.utils.InfoManager
-import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 
 @Composable
 fun SplashScreen(
@@ -26,12 +24,14 @@ fun SplashScreen(
                     }
                 }
                 else -> {
+                    infoManager.clearTokens()
                     navController.navigate("login") {
                         popUpTo("splash") { inclusive = true }
                     }
                 }
             }
         } else {
+            infoManager.clearTokens()
             navController.navigate("login") {
                 popUpTo("splash") { inclusive = true }
             }
