@@ -29,7 +29,7 @@ object NetworkModule {
 
     // Địa chỉ server (dùng 10.0.2.2 thay vì localhost để Android Emulator
     // truy cập máy tính của bạn)
-    private const val BASE_URL = "http://192.168.1.6:8080/api/"
+    private const val BASE_URL = "http://192.168.1.10:8080/api/"
 
     /**
      * Dùng để ghi log request & response khi bạn gọi API.

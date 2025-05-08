@@ -98,4 +98,6 @@ dependencies {
     }
 
     kapt("com.squareup:javapoet:1.13.0")
+
+    implementation(libs.coil.compose)
 }
