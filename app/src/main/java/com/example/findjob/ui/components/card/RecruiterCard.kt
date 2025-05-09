@@ -14,9 +14,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 
 @Composable
 fun RecruiterCard(
+    navController: NavController
 //    data: Any,
 //    onClick: () -> Unit,
 ) {
@@ -25,7 +27,7 @@ fun RecruiterCard(
             .fillMaxWidth()
 //            .clickable { onClick() }
             .padding(12.dp)
-            .background(Color(0xFFF8F9FB), shape = RoundedCornerShape(30.dp))
+            .background(Color.White, shape = RoundedCornerShape(30.dp))
             .border(width = 1.dp, color = Color(0xFFE5E6EB), shape = RoundedCornerShape(30.dp)),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -77,7 +79,7 @@ fun RecruiterCard(
                 Spacer(modifier = Modifier.width(6.dp))
                 Tag(text = "Full time", fontSize = 9)
                 Spacer(modifier = Modifier.width(6.dp))
-                Tag(text = "Curriculum", bgColor = Color(0xFFFFE3DD), textColor = Color(0xFFED7457), fontSize = 9)
+                CurriculumButton(navController)
             }
         }
     }
@@ -91,5 +93,22 @@ private fun Tag(text: String, bgColor: Color = Color(0xFFF3F4F6), textColor: Col
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
         Text(text = text, color = textColor, fontSize = fontSize.sp)
+    }
+}
+
+@Composable
+private fun CurriculumButton(navController: NavController) {
+    Box(
+        modifier = Modifier
+            .background(Color(0xFFFFE3DD), shape = RoundedCornerShape(8.dp))
+            .clickable { navController.navigate("listCurriculum/1") }
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "Curriculum",
+            color = Color(0xFFED7457),
+            fontSize = 9.sp
+        )
     }
 }

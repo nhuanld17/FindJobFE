@@ -10,28 +10,38 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.findjob.R
+import com.example.findjob.utils.InfoManager
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Profile() {
+fun Profile(
+    navController: NavController,
+    infoManager: InfoManager
+) {
     var avatarUri by remember { mutableStateOf<Uri?>(null) }
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         if (uri != null) avatarUri = uri
     }
+    var showLogoutSheet by remember { mutableStateOf(false) }
+    val logoutSheetState = rememberModalBottomSheetState()
 
     Box(
         modifier = Modifier
@@ -56,13 +66,21 @@ fun Profile() {
                 painter = painterResource(id = R.drawable.ic_back),
                 contentDescription = "Back",
                 tint = Color.White,
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier
+                    .size(24.dp)
+                    .clickable {
+                        navController.navigate("recruiterHome")
+                    }
             )
             Icon(
                 painter = painterResource(id = R.drawable.ic_logout),
                 contentDescription = "Logout",
                 tint = Color.White,
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier
+                    .size(24.dp)
+                    .clickable {
+                        showLogoutSheet = true
+                    }
             )
         }
         Column(
@@ -124,6 +142,47 @@ fun Profile() {
                     fontSize = 10.sp,
                     lineHeight = 5.sp
                 )
+            }
+        }
+    }
+
+    // Bottom sheet xác nhận logout
+    if (showLogoutSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showLogoutSheet = false },
+            sheetState = logoutSheetState
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text("Do you want to logout?", color = Color(0xFF23235B), fontSize = 15.sp)
+                Spacer(modifier = Modifier.height(24.dp))
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    Button(
+                        onClick = { showLogoutSheet = false },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.LightGray)
+                    ) {
+                        Text("Cancel", color = Color(0xFF23235B))
+                    }
+                    Button(
+                        onClick = {
+                            infoManager.clearTokens()
+                            showLogoutSheet = false
+                            navController.navigate("login") { popUpTo(0) }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF23235B))
+                    ) {
+                        Text("Logout", color = Color.White)
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
             }
         }
     }
