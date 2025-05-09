@@ -27,4 +27,22 @@ class EmployeeRepository @Inject constructor(
             Result.failure(e)
         }
     }
+
+    suspend fun updateEmployeeProfile(employeeProfileDTO: EmployeeProfileDTO) : Result<EmployeeProfileDTO> {
+        return try {
+            val response = employeeApi.updateEmployeeProfile(employeeProfileDTO)
+            if (response.isSuccessful) {
+                val responseBody = response.body()
+                if (responseBody?.statusCode in 200..299) {
+                    Result.success(responseBody?.data!!)
+                } else {
+                    Result.failure(Exception(responseBody?.message ?: "Failed to update profile"))
+                }
+            } else {
+                Result.failure(Exception("Failed to update profile"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

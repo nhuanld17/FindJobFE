@@ -30,6 +30,19 @@ class EmployeeProfileViewModel @Inject constructor(
                 }
         }
     }
+
+    fun updateProfile(profile: EmployeeProfileDTO) {
+        viewModelScope.launch {
+            _state.value = ProfileState.Loading
+            repository.updateEmployeeProfile(profile)
+                .onSuccess { updatedProfile ->
+                    _state.value = ProfileState.Success(updatedProfile)
+                }
+                .onFailure { error ->
+                    _state.value = ProfileState.Error(error.message ?: "Failed to update profile")
+                }
+        }
+    }
 }
 
 sealed class ProfileState {
