@@ -2,6 +2,7 @@ package com.example.findjob.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.findjob.data.model.request.ChangePasswordRequest
 import com.example.findjob.data.model.response.EmployeeProfileDTO
 import com.example.findjob.data.model.response.UpdateEmployeeProfileResponse
 import com.example.findjob.data.repository.EmployeeRepository
@@ -53,6 +54,28 @@ class EmployeeProfileViewModel @Inject constructor(
                 }
         }
     }
+
+    fun changePassword(currentPassword: String, newPassword: String, confirmPassword: String) {
+        viewModelScope.launch {
+            try {
+                _state.value = ProfileState.Loading
+                val request = ChangePasswordRequest(
+                    current = currentPassword,
+                    newPassword = newPassword,
+                    confirmPassword = confirmPassword
+                )
+                repository.changePassword(request)
+                    .onSuccess {
+                        _state.value = ProfileState.PasswordChanged
+                    }
+                    .onFailure { error ->
+                        _state.value = ProfileState.Error(error.message ?: "Failed to change password")
+                    }
+            } catch (e: Exception) {
+                _state.value = ProfileState.Error(e.message ?: "An unexpected error occurred")
+            }
+        }
+    }
 }
 
 sealed class ProfileState {
@@ -60,4 +83,5 @@ sealed class ProfileState {
     object Loading : ProfileState()
     data class Success(val profile: EmployeeProfileDTO) : ProfileState()
     data class Error(val message: String) : ProfileState()
+    object PasswordChanged : ProfileState()
 }

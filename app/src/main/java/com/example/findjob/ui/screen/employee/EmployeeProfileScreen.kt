@@ -117,11 +117,13 @@ fun EmployeeProfileScreen(
     var currentPassword by remember { mutableStateOf("") }
     var newPassword by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+    var passwordError by remember { mutableStateOf<String?>(null) }
 
     // State cho dialog
     var showDialog by remember { mutableStateOf(false) }
     var dialogMessage by remember { mutableStateOf("") }
     var isSuccess by remember { mutableStateOf(false) }
+    var isPasswordDialog by remember { mutableStateOf(false) }
 
     // Collect state từ ViewModel
     val profileState by viewModel.state.collectAsState()
@@ -153,18 +155,36 @@ fun EmployeeProfileScreen(
                     year = dob.year?.toString() ?: ""
                 }
 
-                // Hiển thị dialog thành công
-                if (showDialog) {
+                // Hiển thị dialog thành công cho update profile
+                if (showDialog && !isPasswordDialog) {
                     dialogMessage = "Profile updated successfully!"
                     isSuccess = true
                 }
             }
             is ProfileState.Error -> {
-                // Hiển thị dialog lỗi
+                // Hiển thị dialog lỗi cho cả profile update và password change
                 if (showDialog) {
                     dialogMessage = (profileState as ProfileState.Error).message
                     isSuccess = false
+                    // Nếu là lỗi đổi mật khẩu, giữ lại giá trị mật khẩu để người dùng có thể sửa
+                    if (isPasswordDialog) {
+                        // Không reset các trường mật khẩu khi có lỗi
+                    } else {
+                        // Reset các trường profile khi có lỗi
+                        viewModel.getProfile()
+                    }
                 }
+            }
+            is ProfileState.PasswordChanged -> {
+                // Hiển thị dialog đổi mật khẩu thành công
+                isPasswordDialog = true
+                dialogMessage = "Password changed successfully!"
+                isSuccess = true
+                showDialog = true
+                // Reset các trường mật khẩu
+                currentPassword = ""
+                newPassword = ""
+                confirmPassword = ""
             }
             else -> {}
         }
@@ -200,6 +220,20 @@ fun EmployeeProfileScreen(
         }
         
         dateError = null
+        return true
+    }
+
+    // Hàm validate password
+    fun validatePassword(): Boolean {
+        if (newPassword != confirmPassword) {
+            passwordError = "Mật khẩu mới và xác nhận mật khẩu không khớp"
+            return false
+        }
+        if (newPassword.length < 6) {
+            passwordError = "Mật khẩu mới phải có ít nhất 6 ký tự"
+            return false
+        }
+        passwordError = null
         return true
     }
 
@@ -563,7 +597,10 @@ fun EmployeeProfileScreen(
                     Spacer(modifier = Modifier.height(16.dp))
                     OutlinedTextField(
                         value = newPassword,
-                        onValueChange = { newPassword = it },
+                        onValueChange = { 
+                            newPassword = it
+                            validatePassword()
+                        },
                         label = { Text("New Password") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
@@ -578,7 +615,10 @@ fun EmployeeProfileScreen(
                     Spacer(modifier = Modifier.height(16.dp))
                     OutlinedTextField(
                         value = confirmPassword,
-                        onValueChange = { confirmPassword = it },
+                        onValueChange = { 
+                            confirmPassword = it
+                            validatePassword()
+                        },
                         label = { Text("Confirm New Password") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
@@ -590,14 +630,32 @@ fun EmployeeProfileScreen(
                             )
                         }
                     )
+                    if (passwordError != null) {
+                        Text(
+                            text = passwordError!!,
+                            color = Color.Red,
+                            fontSize = 12.sp,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
                     Spacer(modifier = Modifier.height(24.dp))
                     Button(
-                        onClick = {},
+                        onClick = {
+                            if (validatePassword()) {
+                                showDialog = true
+                                isPasswordDialog = true
+                                viewModel.changePassword(currentPassword, newPassword, confirmPassword)
+                            }
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(48.dp),
                         shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1A1446))
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1A1446)),
+                        enabled = currentPassword.isNotEmpty() && 
+                                 newPassword.isNotEmpty() && 
+                                 confirmPassword.isNotEmpty() && 
+                                 passwordError == null
                     ) {
                         Text("CHANGE PASSWORD", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                     }
@@ -612,7 +670,12 @@ fun EmployeeProfileScreen(
         // Dialog hiển thị kết quả
         if (showDialog) {
             AlertDialog(
-                onDismissRequest = { showDialog = false },
+                onDismissRequest = { 
+                    showDialog = false
+                    if (isPasswordDialog) {
+                        isPasswordDialog = false
+                    }
+                },
                 title = { Text(if (isSuccess) "Success" else "Error") },
                 text = { Text(dialogMessage) },
                 confirmButton = {
@@ -620,7 +683,9 @@ fun EmployeeProfileScreen(
                         onClick = { 
                             showDialog = false
                             if (isSuccess) {
-                                navController.popBackStack()
+                                if (!isPasswordDialog) {
+                                    navController.popBackStack()
+                                }
                             }
                         }
                     ) {

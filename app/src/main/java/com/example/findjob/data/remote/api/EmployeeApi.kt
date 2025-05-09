@@ -1,6 +1,7 @@
 package com.example.findjob.data.remote.api
 
 import com.example.findjob.data.model.common.RestResponse
+import com.example.findjob.data.model.request.ChangePasswordRequest
 import com.example.findjob.data.model.response.EmployeeProfileDTO
 import com.example.findjob.data.model.response.UpdateEmployeeProfileResponse
 import retrofit2.Response
@@ -15,4 +16,8 @@ interface EmployeeApi {
     @POST("employee/profile")
     suspend fun updateEmployeeProfile(@Body employeeProfileDTO: EmployeeProfileDTO) :
             Response<RestResponse<UpdateEmployeeProfileResponse>>
+
+    @POST("employee/change-password")
+    suspend fun changePassword(@Body changePasswordRequest: ChangePasswordRequest) :
+            Response<RestResponse<Unit>>
 }
