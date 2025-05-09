@@ -141,9 +141,9 @@ fun EmployeeProfileScreen(
                 fullName = profile.fullName ?: ""
                 email = profile.email ?: ""
                 phoneNumber = profile.phoneNumber ?: ""
-                gender = when (profile.gender?.lowercase()) {
-                    "male" -> "Male"
-                    "female" -> "Female"
+                gender = when (profile.gender?.uppercase()) {
+                    "MALE" -> "Male"
+                    "FEMALE" -> "Female"
                     else -> ""
                 }
                 location = profile.location ?: ""
@@ -543,7 +543,7 @@ fun EmployeeProfileScreen(
                                 fullName = fullName,
                                 email = email,
                                 phoneNumber = phoneNumber,
-                                gender = gender.lowercase(),
+                                gender = gender.uppercase(),
                                 location = location,
                                 dateOfBirth = dateOfBirth
                             )
