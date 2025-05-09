@@ -1,6 +1,7 @@
 package com.example.findjob.di
 
 import com.example.findjob.data.remote.api.AuthApi
+import com.example.findjob.data.remote.api.EmployeeApi
 import com.example.findjob.data.remote.interceptor.AuthInterceptor
 import com.example.findjob.data.remote.interceptor.TokenAuthenticator
 import com.example.findjob.utils.InfoManager
@@ -68,17 +69,35 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideRetrofit(client: OkHttpClient): Retrofit {
-        return Retrofit.Builder()
-            .baseUrl(BASE_URL)
-            .client(client)
+        return Retrofit.Builder() // Tạo một instance mới của Retrofit với cấu hình tùy chỉnh.
+            .baseUrl(BASE_URL) // Thiết lập địa chỉ gốc của API (ví dụ "https://api.example.com/").
+            .client(client) // Sử dụng OkHttpClient đã tiêm vào, cho phép cấu hình các middleware,
+                            // interceptor, logging, cache, retry...
+            // Dùng Gson để chuyển đổi JSON thành object Kotlin/Java và ngược lại.
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }
 
+    /**
+     * - Sử dụng Dagger (hoặc Hilt) để cung cấp một implementation của AuthApi từ Retrofit
+     * @Provides: Là annotation của Dagger/Hilt dùng để đánh dấu rằng hàm này cung
+     * cấp một dependency. Dagger sẽ gọi hàm này khi cần một instance của AuthApi.
+     * @Singleton: Dagger sẽ tạo một instance duy nhất (singleton) cho toàn bộ vòng
+     * đời của app. Mọi nơi inject AuthApi đều dùng cùng một instance Retrofit đã tạo ra từ đây.
+     * - Hàm này nhận vào một instance của Retrofit (đã được Dagger/Hilt cung cấp ở đâu đó).
+     * - Sau đó gọi retrofit.create(AuthApi::class.java) để tạo ra implementation của interface
+     * AuthApi.
+     */
     @Provides
     @Singleton
     fun provideAuthApi(retrofit: Retrofit): AuthApi {
         return retrofit.create(AuthApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideEmployeeApi(retrofit: Retrofit): EmployeeApi {
+        return retrofit.create(EmployeeApi::class.java)
     }
 
     /**

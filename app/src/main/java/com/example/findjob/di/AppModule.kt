@@ -2,7 +2,9 @@ package com.example.findjob.di
 
 import android.content.Context
 import com.example.findjob.data.remote.api.AuthApi
+import com.example.findjob.data.remote.api.EmployeeApi
 import com.example.findjob.data.repository.AuthRepository
+import com.example.findjob.data.repository.EmployeeRepository
 import com.example.findjob.utils.InfoManager
 import dagger.Module
 import dagger.Provides
@@ -36,6 +38,14 @@ object AppModule {
         infoManager: InfoManager
     ): AuthRepository {
         return AuthRepository(api, infoManager)
+    }
+
+    @Provides
+    @Singleton
+    fun provideEmployeeRepository(
+        api: EmployeeApi
+    ) : EmployeeRepository {
+        return EmployeeRepository(api)
     }
 
     /**
