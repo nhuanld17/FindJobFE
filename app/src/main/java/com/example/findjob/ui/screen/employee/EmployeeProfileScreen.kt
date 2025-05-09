@@ -16,15 +16,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -53,6 +54,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -66,6 +68,7 @@ import com.example.findjob.const.VietnamProvinces
 import com.example.findjob.data.model.response.DateOfBirth
 import com.example.findjob.data.model.response.EmployeeProfileDTO
 import com.example.findjob.ui.components.EmployeeBottomBar
+import com.example.findjob.utils.InfoManager
 import com.example.findjob.viewmodel.EmployeeProfileViewModel
 import com.example.findjob.viewmodel.ProfileState
 
@@ -73,7 +76,8 @@ import com.example.findjob.viewmodel.ProfileState
 @Composable
 fun EmployeeProfileScreen(
     navController: NavController,
-    viewModel: EmployeeProfileViewModel = hiltViewModel()
+    viewModel: EmployeeProfileViewModel = hiltViewModel(),
+    infoManager: InfoManager,
 ) {
     // State lưu uri ảnh đại diện
     var avatarUri by remember { mutableStateOf<Uri?>(null) }
@@ -237,12 +241,16 @@ fun EmployeeProfileScreen(
         return true
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .statusBarsPadding()
+    ) {
         // Background gradient top
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(220.dp)
+                .height(280.dp)
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(Color(0xFF4B3FAE), Color(0xFF6C63FF))
@@ -297,9 +305,17 @@ fun EmployeeProfileScreen(
                     modifier = Modifier.clickable { navController.popBackStack() }
                 )
                 Icon(
-                    imageVector = Icons.Default.Settings,
-                    contentDescription = "Settings",
-                    tint = Color.White
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Logout",
+                    tint = Color.White,
+                    modifier = Modifier
+                        .graphicsLayer(rotationZ = 180f)
+                        .clickable {
+                            infoManager.clearTokens()
+                            navController.navigate("login") {
+                                popUpTo("splash") { inclusive = true }
+                            }
+                        }
                 )
             }
             Spacer(modifier = Modifier.height(8.dp))
@@ -321,19 +337,15 @@ fun EmployeeProfileScreen(
                 // Nếu chưa chọn ảnh thì để màu xám hoặc icon mặc định
             }
             Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Orlando Diggs",
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            )
-            Text(
-                text = "California, USA",
-                color = Color.White,
-                fontSize = 14.sp,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            )
+            infoManager.getName()?.let {
+                Text(
+                    text = it,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp,
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
+            }
             Spacer(modifier = Modifier.height(8.dp))
             // Nút chọn ảnh
             TextButton(

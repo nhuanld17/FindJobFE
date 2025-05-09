@@ -38,7 +38,7 @@ fun AppNavGraph(
         // Employee Screen
         composable("employeeHome") { EmployeeHomeScreen(navController) }
         composable("companyInfo") { CompanyInfoScreen(navController) }
-        composable("employeeProfile") { EmployeeProfileScreen(navController) }
+        composable("employeeProfile") { EmployeeProfileScreen(navController, infoManager = infoManager) }
         composable("filter") { FilterScreen(navController) }
         composable("jobDescription") { JobDescriptionScreen(navController) }
         composable("notification") { NotificationScreen(navController) }
