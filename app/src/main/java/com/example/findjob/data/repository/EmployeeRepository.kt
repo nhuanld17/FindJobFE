@@ -1,14 +1,16 @@
 package com.example.findjob.data.repository
 
-import com.example.findjob.data.model.request.LoginRequest
 import com.example.findjob.data.model.response.EmployeeProfileDTO
+import com.example.findjob.data.model.response.UpdateEmployeeProfileResponse
 import com.example.findjob.data.remote.api.EmployeeApi
+import com.example.findjob.utils.InfoManager
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class EmployeeRepository @Inject constructor(
-    private val employeeApi: EmployeeApi
+    private val employeeApi: EmployeeApi,
+    private val infoManager: InfoManager
 ){
     suspend fun getEmployeeProfile(): Result<EmployeeProfileDTO> {
         return try {
@@ -28,12 +30,15 @@ class EmployeeRepository @Inject constructor(
         }
     }
 
-    suspend fun updateEmployeeProfile(employeeProfileDTO: EmployeeProfileDTO) : Result<EmployeeProfileDTO> {
+    suspend fun updateEmployeeProfile(employeeProfileDTO: EmployeeProfileDTO) : Result<UpdateEmployeeProfileResponse> {
         return try {
             val response = employeeApi.updateEmployeeProfile(employeeProfileDTO)
+            // Nếu update thành công thì update thông tin lưu trong sharedpref
             if (response.isSuccessful) {
                 val responseBody = response.body()
                 if (responseBody?.statusCode in 200..299) {
+                    val updateResponse = responseBody?.data
+                    infoManager.updateInfo(updateResponse)
                     Result.success(responseBody?.data!!)
                 } else {
                     Result.failure(Exception(responseBody?.message ?: "Failed to update profile"))

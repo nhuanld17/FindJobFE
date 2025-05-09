@@ -25,6 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -62,6 +63,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.findjob.const.VietnamProvinces
+import com.example.findjob.data.model.response.DateOfBirth
+import com.example.findjob.data.model.response.EmployeeProfileDTO
 import com.example.findjob.ui.components.EmployeeBottomBar
 import com.example.findjob.viewmodel.EmployeeProfileViewModel
 import com.example.findjob.viewmodel.ProfileState
@@ -115,6 +118,11 @@ fun EmployeeProfileScreen(
     var newPassword by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
 
+    // State cho dialog
+    var showDialog by remember { mutableStateOf(false) }
+    var dialogMessage by remember { mutableStateOf("") }
+    var isSuccess by remember { mutableStateOf(false) }
+
     // Collect state từ ViewModel
     val profileState by viewModel.state.collectAsState()
 
@@ -143,6 +151,19 @@ fun EmployeeProfileScreen(
                     day = dob.day?.toString() ?: ""
                     month = dob.month?.toString() ?: ""
                     year = dob.year?.toString() ?: ""
+                }
+
+                // Hiển thị dialog thành công
+                if (showDialog) {
+                    dialogMessage = "Profile updated successfully!"
+                    isSuccess = true
+                }
+            }
+            is ProfileState.Error -> {
+                // Hiển thị dialog lỗi
+                if (showDialog) {
+                    dialogMessage = (profileState as ProfileState.Error).message
+                    isSuccess = false
                 }
             }
             else -> {}
@@ -477,7 +498,24 @@ fun EmployeeProfileScreen(
                     }
                     Spacer(modifier = Modifier.height(24.dp))
                     Button(
-                        onClick = {},
+                        onClick = {
+                            val dateOfBirth = DateOfBirth(
+                                day = day.toIntOrNull() ?: 0,
+                                month = month.toIntOrNull() ?: 0,
+                                year = year.toIntOrNull() ?: 0
+                            )
+                            
+                            val profile = EmployeeProfileDTO(
+                                fullName = fullName,
+                                email = email,
+                                phoneNumber = phoneNumber,
+                                gender = gender.lowercase(),
+                                location = location,
+                                dateOfBirth = dateOfBirth
+                            )
+                            showDialog = true
+                            viewModel.updateProfile(profile)
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(48.dp),
@@ -570,5 +608,26 @@ fun EmployeeProfileScreen(
             navController = navController,
             modifier = Modifier.align(Alignment.BottomCenter)
         )
+
+        // Dialog hiển thị kết quả
+        if (showDialog) {
+            AlertDialog(
+                onDismissRequest = { showDialog = false },
+                title = { Text(if (isSuccess) "Success" else "Error") },
+                text = { Text(dialogMessage) },
+                confirmButton = {
+                    TextButton(
+                        onClick = { 
+                            showDialog = false
+                            if (isSuccess) {
+                                navController.popBackStack()
+                            }
+                        }
+                    ) {
+                        Text("OK")
+                    }
+                }
+            )
+        }
     }
 }

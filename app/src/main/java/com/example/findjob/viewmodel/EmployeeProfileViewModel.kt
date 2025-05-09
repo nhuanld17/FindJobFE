@@ -3,6 +3,7 @@ package com.example.findjob.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.findjob.data.model.response.EmployeeProfileDTO
+import com.example.findjob.data.model.response.UpdateEmployeeProfileResponse
 import com.example.findjob.data.repository.EmployeeRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,8 +36,17 @@ class EmployeeProfileViewModel @Inject constructor(
         viewModelScope.launch {
             _state.value = ProfileState.Loading
             repository.updateEmployeeProfile(profile)
-                .onSuccess { updatedProfile ->
-                    _state.value = ProfileState.Success(updatedProfile)
+                .onSuccess { updateResponse ->
+                    _state.value = ProfileState.Success(
+                        EmployeeProfileDTO(
+                            fullName = updateResponse.fullName,
+                            email = updateResponse.email,
+                            phoneNumber = updateResponse.phoneNumber,
+                            dateOfBirth = updateResponse.dateOfBirth,
+                            gender = updateResponse.gender,
+                            location = updateResponse.location
+                        )
+                    )
                 }
                 .onFailure { error ->
                     _state.value = ProfileState.Error(error.message ?: "Failed to update profile")

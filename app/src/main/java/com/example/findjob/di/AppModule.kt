@@ -43,9 +43,10 @@ object AppModule {
     @Provides
     @Singleton
     fun provideEmployeeRepository(
-        api: EmployeeApi
+        api: EmployeeApi,
+        infoManager: InfoManager
     ) : EmployeeRepository {
-        return EmployeeRepository(api)
+        return EmployeeRepository(api, infoManager)
     }
 
     /**
