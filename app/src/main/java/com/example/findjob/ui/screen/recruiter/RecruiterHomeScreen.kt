@@ -1,5 +1,6 @@
 package com.example.findjob.ui.screen.recruiter
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -22,9 +23,7 @@ fun RecruiterHomeScreen(
     navController: NavController,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
-    val accessToken = remember { viewModel.infoManager.getAccessToken() } ?: "No Access Token"
-
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize().statusBarsPadding().background(Color(0xFFF9F9F9))) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -32,7 +31,7 @@ fun RecruiterHomeScreen(
         ) {
             Spacer(modifier = Modifier.height(50.dp))
 
-            Avatar(imageUrl = null)
+            Avatar(imageUrl = null, navController)
             Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = "Create Your Job",
@@ -48,11 +47,11 @@ fun RecruiterHomeScreen(
                 modifier = Modifier.padding(start = 16.dp, bottom = 8.dp),
                 color = Color(0xFF23235B)
             )
-            RecruiterCard()
-            RecruiterCard()
-            RecruiterCard()
-            RecruiterCard()
-            RecruiterCard()
+            RecruiterCard(navController)
+            RecruiterCard(navController)
+            RecruiterCard(navController)
+            RecruiterCard(navController)
+            RecruiterCard(navController)
             Spacer(modifier = Modifier.height(130.dp))
         }
         RecruiterBottomBar(

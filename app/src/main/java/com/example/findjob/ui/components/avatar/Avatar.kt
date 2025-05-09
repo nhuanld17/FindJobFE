@@ -19,10 +19,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
+import androidx.navigation.NavController
+import androidx.compose.foundation.clickable
 
 @Composable
 fun Avatar(
     imageUrl: String?,
+    navController: NavController,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -42,7 +45,8 @@ fun Avatar(
             modifier = Modifier
                 .size(48.dp)
                 .clip(CircleShape)
-                .background(Color(0xFFD6D6FF), CircleShape),
+                .background(Color(0xFFD6D6FF), CircleShape)
+                .clickable { navController.navigate("recruiterProfile") },
             contentAlignment = Alignment.Center
         ) {
             val painter = rememberAsyncImagePainter(

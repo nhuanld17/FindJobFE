@@ -16,6 +16,7 @@ import com.example.findjob.ui.screen.employee.UploadCVScreen
 import com.example.findjob.ui.screen.recruiter.RecruiterHomeScreen
 import com.example.findjob.ui.screen.login.LoginScreen
 import com.example.findjob.ui.screen.recruiter.CreateJobScreen
+import com.example.findjob.ui.screen.recruiter.ListCurriculumSceen
 import com.example.findjob.ui.screen.recruiter.RecruiterJobListScreen
 import com.example.findjob.ui.screen.recruiter.RecruiterProfileScreen
 import com.example.findjob.ui.screen.register.RegisterScreen
@@ -51,5 +52,9 @@ fun AppNavGraph(
         composable("createJob") { CreateJobScreen(navController) }
         composable("jobLists") { RecruiterJobListScreen(navController) }
         composable("recruiterProfile") { RecruiterProfileScreen(navController) }
+        composable("listCurriculum/{id}") { backStackEntry ->
+            val id = backStackEntry.arguments?.getString("id") ?: ""
+            ListCurriculumSceen(navController, id)
+        }
     }
 }
