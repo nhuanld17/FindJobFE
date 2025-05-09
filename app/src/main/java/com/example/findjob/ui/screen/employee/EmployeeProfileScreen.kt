@@ -131,7 +131,11 @@ fun EmployeeProfileScreen(
                 fullName = profile.fullName ?: ""
                 email = profile.email ?: ""
                 phoneNumber = profile.phoneNumber ?: ""
-                gender = profile.gender ?: ""
+                gender = when (profile.gender?.lowercase()) {
+                    "male" -> "Male"
+                    "female" -> "Female"
+                    else -> ""
+                }
                 location = profile.location ?: ""
                 
                 // Xử lý dateOfBirth an toàn hơn
@@ -392,12 +396,12 @@ fun EmployeeProfileScreen(
                             modifier = Modifier
                                 .weight(1f)
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(if (gender == "Male") Color(0xFFFFF6E5) else Color(0xFFF3F3F3))
+                                .background(if (gender.equals("Male", ignoreCase = true)) Color(0xFFFFF6E5) else Color(0xFFF3F3F3))
                                 .clickable { gender = "Male" }
                                 .padding(vertical = 8.dp)
                         ) {
                             RadioButton(
-                                selected = gender == "Male",
+                                selected = gender.equals("Male", ignoreCase = true),
                                 onClick = { gender = "Male" },
                                 colors = RadioButtonDefaults.colors(selectedColor = Color(0xFFFF9900))
                             )
@@ -408,12 +412,12 @@ fun EmployeeProfileScreen(
                             modifier = Modifier
                                 .weight(1f)
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(if (gender == "Female") Color(0xFFFFF6E5) else Color(0xFFF3F3F3))
+                                .background(if (gender.equals("Female", ignoreCase = true)) Color(0xFFFFF6E5) else Color(0xFFF3F3F3))
                                 .clickable { gender = "Female" }
                                 .padding(vertical = 8.dp)
                         ) {
                             RadioButton(
-                                selected = gender == "Female",
+                                selected = gender.equals("Female", ignoreCase = true),
                                 onClick = { gender = "Female" },
                                 colors = RadioButtonDefaults.colors(selectedColor = Color(0xFFFF9900))
                             )
