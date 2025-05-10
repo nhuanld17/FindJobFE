@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.findjob.ui.components.RecruiterBottomBar
+import com.example.findjob.ui.components.card.CvCard
 
 @Composable
 fun ListCurriculumSceen (navController: NavController, id: String) {
@@ -36,11 +37,12 @@ fun ListCurriculumSceen (navController: NavController, id: String) {
                 modifier = Modifier.padding(start = 16.dp, bottom = 8.dp),
                 color = Color(0xFF23235B)
             )
-            Text(
-                text = "Curriculum id: $id",
-                modifier = Modifier.padding(start = 16.dp, bottom = 8.dp),
-                color = Color(0xFF23235B)
-            )
+            CvCard("Tien","Thừa Thiên Huế",navController)
+            CvCard("Tien","Thừa Thiên Huế",navController)
+            CvCard("Tien","Thừa Thiên Huế",navController)
+            CvCard("Tien","Thừa Thiên Huế",navController)
+            CvCard("Tien","Thừa Thiên Huế",navController)
+            CvCard("Tien","Thừa Thiên Huế",navController)
             Spacer(modifier = Modifier.height(130.dp))
         }
         RecruiterBottomBar(

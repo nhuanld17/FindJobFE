@@ -2,9 +2,11 @@ package com.example.findjob.di
 
 import com.example.findjob.data.remote.api.AuthApi
 import com.example.findjob.data.remote.api.EmployeeApi
+import com.example.findjob.data.remote.api.JobPostApi
 import com.example.findjob.data.remote.interceptor.AuthInterceptor
 import com.example.findjob.data.remote.interceptor.TokenAuthenticator
 import com.example.findjob.utils.InfoManager
+import com.example.findjob.data.remote.api.RecruiterApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -122,5 +124,17 @@ object NetworkModule {
             .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
             .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideJobPostApi(retrofit: Retrofit): JobPostApi {
+        return retrofit.create(JobPostApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideRecruiterApi(retrofit: Retrofit): RecruiterApi {
+        return retrofit.create(RecruiterApi::class.java)
     }
 }

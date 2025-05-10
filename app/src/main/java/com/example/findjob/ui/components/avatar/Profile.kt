@@ -46,7 +46,7 @@ fun Profile(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(300.dp)
+            .height(280.dp)
     ) {
         Image(
             painter = painterResource(id = R.drawable.background),

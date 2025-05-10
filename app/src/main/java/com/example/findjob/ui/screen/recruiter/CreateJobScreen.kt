@@ -25,13 +25,19 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.findjob.ui.components.RecruiterBottomBar
 import com.example.findjob.ui.components.bottomSheet.SingleChoiceBottomSheet
+import com.example.findjob.viewmodel.JobPostState
+import com.example.findjob.viewmodel.JobPostViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CreateJobScreen(navController: NavController) {
+fun CreateJobScreen(
+    navController: NavController,
+    viewModel: JobPostViewModel = hiltViewModel()
+) {
     var jobTitle by remember { mutableStateOf("") }
     var jobDescription by remember { mutableStateOf("") }
     var requirements by remember { mutableStateOf("") }
@@ -86,6 +92,9 @@ fun CreateJobScreen(navController: NavController) {
     val jobDescriptionFocusRequester = remember { FocusRequester() }
     val requirementsFocusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
+
+    // Thêm state cho ViewModel
+    val jobPostState by viewModel.state.collectAsState()
 
     Box(modifier = Modifier
         .fillMaxSize()
@@ -342,6 +351,53 @@ fun CreateJobScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Cập nhật phần hiển thị dialog
+            if (showDialog) {
+                AlertDialog(
+                    onDismissRequest = { showDialog = false },
+                    title = { Text("Job Post Status") },
+                    text = {
+                        when (jobPostState) {
+                            is JobPostState.Success -> {
+                                Text((jobPostState as JobPostState.Success).message)
+                            }
+                            is JobPostState.Error -> {
+                                Text((jobPostState as JobPostState.Error).message)
+                            }
+                            is JobPostState.Loading -> {
+                                CircularProgressIndicator()
+                            }
+                            else -> {
+                                Column {
+                                    Text("Job title: $jobTitle")
+                                    Text("Job Description: $jobDescription")
+                                    Text("Requirements: $requirements")
+                                    Text("Position: $position")
+                                    Text("Qualification: $qualification")
+                                    Text("Experience: $experience")
+                                    Text("Work Type: $workType")
+                                    Text("Job Type: $jobType")
+                                    Text("Salary: $salary")
+                                }
+                            }
+                        }
+                    },
+                    confirmButton = {
+                        Button(
+                            onClick = { 
+                                showDialog = false
+                                if (jobPostState is JobPostState.Success) {
+                                    navController.navigateUp()
+                                }
+                            }
+                        ) {
+                            Text("OK")
+                        }
+                    }
+                )
+            }
+
+            // Cập nhật phần Button CREATE JOB POST
             Button(
                 onClick = {
                     // Validate all fields
@@ -387,6 +443,16 @@ fun CreateJobScreen(navController: NavController) {
                     }
                     if (!hasError) {
                         showDialog = true
+                        viewModel.createJobPost(
+                            title = jobTitle,
+                            description = jobDescription,
+                            position = position,
+                            qualification = qualification,
+                            experience = experience,
+                            type = jobType,
+                            salary = salary,
+                            workType = workType
+                        )
                     }
                 },
                 modifier = Modifier
@@ -404,31 +470,6 @@ fun CreateJobScreen(navController: NavController) {
             modifier = Modifier.align(Alignment.BottomCenter)
         )
 
-        // Overlay hiển thị dữ liệu đã nhập
-        if (showDialog) {
-            AlertDialog(
-                onDismissRequest = { showDialog = false },
-                title = { Text("Job Post Data") },
-                text = {
-                    Column {
-                        Text("Job title: $jobTitle")
-                        Text("Job Description: $jobDescription")
-                        Text("Requirements: $requirements")
-                        Text("Position: $position")
-                        Text("Qualification: $qualification")
-                        Text("Experience: $experience")
-                        Text("Salary: $workType")
-                        Text("Job Type: $jobType")
-                        Text("Salary: $salary")
-                    }
-                },
-                confirmButton = {
-                    Button(onClick = { showDialog = false }) {
-                        Text("OK")
-                    }
-                }
-            )
-        }
         // Bottom Sheet for Position
         SingleChoiceBottomSheet(
             showSheet = showPositionSheet,
