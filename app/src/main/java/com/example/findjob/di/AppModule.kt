@@ -1,8 +1,10 @@
 package com.example.findjob.di
 
 import android.content.Context
+import com.example.findjob.data.remote.api.AIApi
 import com.example.findjob.data.remote.api.AuthApi
 import com.example.findjob.data.remote.api.EmployeeApi
+import com.example.findjob.data.repository.AIRepository
 import com.example.findjob.data.repository.AuthRepository
 import com.example.findjob.data.repository.EmployeeRepository
 import com.example.findjob.utils.InfoManager
@@ -11,6 +13,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import retrofit2.Retrofit
 import javax.inject.Singleton
 
 /**
@@ -43,9 +46,25 @@ object AppModule {
     @Provides
     @Singleton
     fun provideEmployeeRepository(
-        api: EmployeeApi
+        api: EmployeeApi,
+        infoManager: InfoManager
     ) : EmployeeRepository {
-        return EmployeeRepository(api)
+        return EmployeeRepository(api, infoManager)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAIRepository(
+        api: AIApi,
+        @ApplicationContext context: Context
+    ): AIRepository {
+        return AIRepository(api, context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAIApi(retrofit: Retrofit): AIApi {
+        return retrofit.create(AIApi::class.java)
     }
 
     /**

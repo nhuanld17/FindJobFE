@@ -16,15 +16,17 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -52,6 +54,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -62,7 +66,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.findjob.const.VietnamProvinces
+import com.example.findjob.data.model.response.DateOfBirth
+import com.example.findjob.data.model.response.EmployeeProfileDTO
 import com.example.findjob.ui.components.EmployeeBottomBar
+import com.example.findjob.utils.InfoManager
 import com.example.findjob.viewmodel.EmployeeProfileViewModel
 import com.example.findjob.viewmodel.ProfileState
 
@@ -70,7 +77,8 @@ import com.example.findjob.viewmodel.ProfileState
 @Composable
 fun EmployeeProfileScreen(
     navController: NavController,
-    viewModel: EmployeeProfileViewModel = hiltViewModel()
+    viewModel: EmployeeProfileViewModel = hiltViewModel(),
+    infoManager: InfoManager,
 ) {
     // State lưu uri ảnh đại diện
     var avatarUri by remember { mutableStateOf<Uri?>(null) }
@@ -114,6 +122,13 @@ fun EmployeeProfileScreen(
     var currentPassword by remember { mutableStateOf("") }
     var newPassword by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+    var passwordError by remember { mutableStateOf<String?>(null) }
+
+    // State cho dialog
+    var showDialog by remember { mutableStateOf(false) }
+    var dialogMessage by remember { mutableStateOf("") }
+    var isSuccess by remember { mutableStateOf(false) }
+    var isPasswordDialog by remember { mutableStateOf(false) }
 
     // Collect state từ ViewModel
     val profileState by viewModel.state.collectAsState()
@@ -131,7 +146,11 @@ fun EmployeeProfileScreen(
                 fullName = profile.fullName ?: ""
                 email = profile.email ?: ""
                 phoneNumber = profile.phoneNumber ?: ""
-                gender = profile.gender ?: ""
+                gender = when (profile.gender?.uppercase()) {
+                    "MALE" -> "Male"
+                    "FEMALE" -> "Female"
+                    else -> ""
+                }
                 location = profile.location ?: ""
                 
                 // Xử lý dateOfBirth an toàn hơn
@@ -140,6 +159,37 @@ fun EmployeeProfileScreen(
                     month = dob.month?.toString() ?: ""
                     year = dob.year?.toString() ?: ""
                 }
+
+                // Hiển thị dialog thành công cho update profile
+                if (showDialog && !isPasswordDialog) {
+                    dialogMessage = "Profile updated successfully!"
+                    isSuccess = true
+                }
+            }
+            is ProfileState.Error -> {
+                // Hiển thị dialog lỗi cho cả profile update và password change
+                if (showDialog) {
+                    dialogMessage = (profileState as ProfileState.Error).message
+                    isSuccess = false
+                    // Nếu là lỗi đổi mật khẩu, giữ lại giá trị mật khẩu để người dùng có thể sửa
+                    if (isPasswordDialog) {
+                        // Không reset các trường mật khẩu khi có lỗi
+                    } else {
+                        // Reset các trường profile khi có lỗi
+                        viewModel.getProfile()
+                    }
+                }
+            }
+            is ProfileState.PasswordChanged -> {
+                // Hiển thị dialog đổi mật khẩu thành công
+                isPasswordDialog = true
+                dialogMessage = "Password changed successfully!"
+                isSuccess = true
+                showDialog = true
+                // Reset các trường mật khẩu
+                currentPassword = ""
+                newPassword = ""
+                confirmPassword = ""
             }
             else -> {}
         }
@@ -178,12 +228,30 @@ fun EmployeeProfileScreen(
         return true
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    // Hàm validate password
+    fun validatePassword(): Boolean {
+        if (newPassword != confirmPassword) {
+            passwordError = "Mật khẩu mới và xác nhận mật khẩu không khớp"
+            return false
+        }
+        if (newPassword.length < 6) {
+            passwordError = "Mật khẩu mới phải có ít nhất 6 ký tự"
+            return false
+        }
+        passwordError = null
+        return true
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .statusBarsPadding()
+    ) {
         // Background gradient top
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(220.dp)
+                .height(280.dp)
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(Color(0xFF4B3FAE), Color(0xFF6C63FF))
@@ -238,9 +306,17 @@ fun EmployeeProfileScreen(
                     modifier = Modifier.clickable { navController.popBackStack() }
                 )
                 Icon(
-                    imageVector = Icons.Default.Settings,
-                    contentDescription = "Settings",
-                    tint = Color.White
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Logout",
+                    tint = Color.White,
+                    modifier = Modifier
+                        .graphicsLayer(rotationZ = 180f)
+                        .clickable {
+                            infoManager.clearTokens()
+                            navController.navigate("login") {
+                                popUpTo("splash") { inclusive = true }
+                            }
+                        }
                 )
             }
             Spacer(modifier = Modifier.height(8.dp))
@@ -256,25 +332,23 @@ fun EmployeeProfileScreen(
                     Image(
                         painter = rememberAsyncImagePainter(avatarUri),
                         contentDescription = "Avatar",
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
                     )
                 }
-                // Nếu chưa chọn ảnh thì để màu xám hoặc icon mặc định
             }
             Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Orlando Diggs",
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            )
-            Text(
-                text = "California, USA",
-                color = Color.White,
-                fontSize = 14.sp,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            )
+            infoManager.getName()?.let {
+                Text(
+                    text = it,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp,
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
+            }
             Spacer(modifier = Modifier.height(8.dp))
             // Nút chọn ảnh
             TextButton(
@@ -392,12 +466,12 @@ fun EmployeeProfileScreen(
                             modifier = Modifier
                                 .weight(1f)
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(if (gender == "Male") Color(0xFFFFF6E5) else Color(0xFFF3F3F3))
+                                .background(if (gender.equals("Male", ignoreCase = true)) Color(0xFFFFF6E5) else Color(0xFFF3F3F3))
                                 .clickable { gender = "Male" }
                                 .padding(vertical = 8.dp)
                         ) {
                             RadioButton(
-                                selected = gender == "Male",
+                                selected = gender.equals("Male", ignoreCase = true),
                                 onClick = { gender = "Male" },
                                 colors = RadioButtonDefaults.colors(selectedColor = Color(0xFFFF9900))
                             )
@@ -408,12 +482,12 @@ fun EmployeeProfileScreen(
                             modifier = Modifier
                                 .weight(1f)
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(if (gender == "Female") Color(0xFFFFF6E5) else Color(0xFFF3F3F3))
+                                .background(if (gender.equals("Female", ignoreCase = true)) Color(0xFFFFF6E5) else Color(0xFFF3F3F3))
                                 .clickable { gender = "Female" }
                                 .padding(vertical = 8.dp)
                         ) {
                             RadioButton(
-                                selected = gender == "Female",
+                                selected = gender.equals("Female", ignoreCase = true),
                                 onClick = { gender = "Female" },
                                 colors = RadioButtonDefaults.colors(selectedColor = Color(0xFFFF9900))
                             )
@@ -473,7 +547,24 @@ fun EmployeeProfileScreen(
                     }
                     Spacer(modifier = Modifier.height(24.dp))
                     Button(
-                        onClick = {},
+                        onClick = {
+                            val dateOfBirth = DateOfBirth(
+                                day = day.toIntOrNull() ?: 0,
+                                month = month.toIntOrNull() ?: 0,
+                                year = year.toIntOrNull() ?: 0
+                            )
+                            
+                            val profile = EmployeeProfileDTO(
+                                fullName = fullName,
+                                email = email,
+                                phoneNumber = phoneNumber,
+                                gender = gender.uppercase(),
+                                location = location,
+                                dateOfBirth = dateOfBirth
+                            )
+                            showDialog = true
+                            viewModel.updateProfile(profile)
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(48.dp),
@@ -521,7 +612,10 @@ fun EmployeeProfileScreen(
                     Spacer(modifier = Modifier.height(16.dp))
                     OutlinedTextField(
                         value = newPassword,
-                        onValueChange = { newPassword = it },
+                        onValueChange = { 
+                            newPassword = it
+                            validatePassword()
+                        },
                         label = { Text("New Password") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
@@ -536,7 +630,10 @@ fun EmployeeProfileScreen(
                     Spacer(modifier = Modifier.height(16.dp))
                     OutlinedTextField(
                         value = confirmPassword,
-                        onValueChange = { confirmPassword = it },
+                        onValueChange = { 
+                            confirmPassword = it
+                            validatePassword()
+                        },
                         label = { Text("Confirm New Password") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
@@ -548,23 +645,65 @@ fun EmployeeProfileScreen(
                             )
                         }
                     )
+                    if (passwordError != null) {
+                        Text(
+                            text = passwordError!!,
+                            color = Color.Red,
+                            fontSize = 12.sp,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
                     Spacer(modifier = Modifier.height(24.dp))
                     Button(
-                        onClick = {},
+                        onClick = {
+                            if (validatePassword()) {
+                                showDialog = true
+                                isPasswordDialog = true
+                                viewModel.changePassword(currentPassword, newPassword, confirmPassword)
+                            }
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(48.dp),
                         shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1A1446))
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1A1446)),
+                        enabled = currentPassword.isNotEmpty() && 
+                                 newPassword.isNotEmpty() && 
+                                 confirmPassword.isNotEmpty() && 
+                                 passwordError == null
                     ) {
                         Text("CHANGE PASSWORD", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                     }
                 }
             }
         }
-        EmployeeBottomBar(
-            navController = navController,
-            modifier = Modifier.align(Alignment.BottomCenter)
-        )
+
+        // Dialog hiển thị kết quả
+        if (showDialog) {
+            AlertDialog(
+                onDismissRequest = { 
+                    showDialog = false
+                    if (isPasswordDialog) {
+                        isPasswordDialog = false
+                    }
+                },
+                title = { Text(if (isSuccess) "Success" else "Error") },
+                text = { Text(dialogMessage) },
+                confirmButton = {
+                    TextButton(
+                        onClick = { 
+                            showDialog = false
+                            if (isSuccess) {
+                                if (!isPasswordDialog) {
+                                    navController.popBackStack()
+                                }
+                            }
+                        }
+                    ) {
+                        Text("OK")
+                    }
+                }
+            )
+        }
     }
 }

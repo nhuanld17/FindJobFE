@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
 import com.example.findjob.data.model.response.AuthResponse
+import com.example.findjob.data.model.response.UpdateEmployeeProfileResponse
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -64,6 +65,24 @@ class InfoManager @Inject constructor(
         Log.d(TAG, "Token saved successfully: ${savedToken != null}")
         Log.d(TAG, "Saved token length: ${savedToken?.length}")
         Log.d(TAG, "Token will expire at: ${java.util.Date(expirationTime)}")
+    }
+
+    fun updateInfo(updateResponse: UpdateEmployeeProfileResponse?) {
+        Log.d(TAG, "Updating info in SharedPref ....")
+
+        // Calculate token expiration time (current time + 24 hours)
+        val expirationTime = System.currentTimeMillis() + (TOKEN_EXPIRATION_TIME * 1000)
+
+        if (updateResponse != null) {
+            sharedPreferences.edit()
+                .putString("email", updateResponse.email)
+                .putString("name", updateResponse.fullName)
+                .putString("access_token", updateResponse.token)
+                .putLong("token_expiration", expirationTime)
+                .apply()
+        }
+
+        Log.d(TAG, "Updated info")
     }
 
     // Trả về token nếu có, hoặc null nếu chưa từng lưu.
