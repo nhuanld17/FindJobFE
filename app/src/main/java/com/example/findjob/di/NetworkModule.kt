@@ -118,9 +118,11 @@ object NetworkModule {
             .addInterceptor(logging)
             .addInterceptor(authInterceptor)
             .authenticator(tokenAuthenticator)
-            .connectTimeout(30, TimeUnit.SECONDS)
-            .readTimeout(30, TimeUnit.SECONDS)
-            .writeTimeout(30, TimeUnit.SECONDS)
+            .connectTimeout(300, TimeUnit.SECONDS)  // Tăng thời gian kết nối lên 5 phút
+            .readTimeout(300, TimeUnit.SECONDS)     // Tăng thời gian đọc lên 5 phút
+            .writeTimeout(300, TimeUnit.SECONDS)    // Tăng thời gian ghi lên 5 phút
+            .callTimeout(300, TimeUnit.SECONDS)     // Tổng thời gian cho một request
+            .retryOnConnectionFailure(true)         // Tự động thử lại khi kết nối thất bại
             .build()
     }
 }

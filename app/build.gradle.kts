@@ -100,4 +100,8 @@ dependencies {
     kapt("com.squareup:javapoet:1.13.0")
 
     implementation("io.coil-kt:coil-compose:2.2.2")
+
+    // Markdown processing
+    implementation("org.commonmark:commonmark:0.21.0")
+    implementation("org.commonmark:commonmark-ext-gfm-tables:0.21.0")
 }

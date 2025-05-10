@@ -1,7 +1,6 @@
 package com.example.findjob.ui.components
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Notifications
@@ -9,18 +8,19 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.example.findjob.R
 
 sealed class EmployeeBottomNavItem(
     val route: String,
     val title: String,
-    val icon: ImageVector
+    val icon: Any // Có thể là ImageVector hoặc Int (resource ID)
 ) {
     object Home : EmployeeBottomNavItem(
         route = "employeeHome",
@@ -32,10 +32,10 @@ sealed class EmployeeBottomNavItem(
         title = "Search",
         icon = Icons.Default.Search
     )
-    object Profile : EmployeeBottomNavItem(
-        route = "employeeProfile",
-        title = "Profile",
-        icon = Icons.Default.AccountCircle
+    object ChatAI : EmployeeBottomNavItem(
+        route = "chatAI",
+        title = "Chat AI",
+        icon = R.drawable.chat_square
     )
     object Notification : EmployeeBottomNavItem(
         route = "notification",
@@ -57,7 +57,7 @@ fun EmployeeBottomBar(
     val items = listOf(
         EmployeeBottomNavItem.Home,
         EmployeeBottomNavItem.Search,
-        EmployeeBottomNavItem.Profile,
+        EmployeeBottomNavItem.ChatAI,
         EmployeeBottomNavItem.Notification,
         EmployeeBottomNavItem.Favourite
     )
@@ -68,7 +68,13 @@ fun EmployeeBottomBar(
 
         items.forEach { item ->
             NavigationBarItem(
-                icon = { Icon(item.icon, contentDescription = item.title) },
+                icon = { 
+                    when (val icon = item.icon) {
+                        is ImageVector -> Icon(icon, contentDescription = item.title)
+                        is Int -> Icon(painter = painterResource(id = icon), contentDescription = item.title)
+                        else -> throw IllegalArgumentException("Unsupported icon type")
+                    }
+                },
                 selected = currentRoute == item.route,
                 onClick = {
                     navController.navigate(item.route) {

@@ -55,6 +55,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -331,10 +332,12 @@ fun EmployeeProfileScreen(
                     Image(
                         painter = rememberAsyncImagePainter(avatarUri),
                         contentDescription = "Avatar",
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
                     )
                 }
-                // Nếu chưa chọn ảnh thì để màu xám hoặc icon mặc định
             }
             Spacer(modifier = Modifier.height(8.dp))
             infoManager.getName()?.let {
@@ -674,10 +677,6 @@ fun EmployeeProfileScreen(
                 }
             }
         }
-        EmployeeBottomBar(
-            navController = navController,
-            modifier = Modifier.align(Alignment.BottomCenter)
-        )
 
         // Dialog hiển thị kết quả
         if (showDialog) {
