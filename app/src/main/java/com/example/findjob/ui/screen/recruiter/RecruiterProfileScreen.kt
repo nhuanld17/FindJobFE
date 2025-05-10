@@ -24,11 +24,11 @@ fun RecruiterProfileScreen(navController: NavController) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState()),
+                .verticalScroll(rememberScrollState())
         ) {
             Profile(navController, infoManager = infoManager)
             ProfileForm()
-            Spacer(modifier = Modifier.height(130.dp))
+            Spacer(modifier = Modifier.height(140.dp))
         }
         RecruiterBottomBar(
             navController = navController,

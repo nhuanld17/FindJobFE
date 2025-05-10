@@ -10,19 +10,22 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.findjob.ui.components.Preview.Preview
-import com.example.findjob.viewmodel.HomeViewModel
+import com.example.findjob.viewmodel.RecruiterHomeViewModel
 import com.example.findjob.ui.components.RecruiterBottomBar
 import com.example.findjob.ui.components.card.RecruiterCard
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import com.example.findjob.ui.components.avatar.Avatar
+import com.example.findjob.viewmodel.HomeState
 
 @Composable
 fun RecruiterHomeScreen(
     navController: NavController,
-    viewModel: HomeViewModel = hiltViewModel()
+    viewModel: RecruiterHomeViewModel = hiltViewModel()
 ) {
+    val state by viewModel.state.collectAsState()
+
     Box(modifier = Modifier.fillMaxSize().statusBarsPadding().background(Color(0xFFF9F9F9))) {
         Column(
             modifier = Modifier
@@ -47,11 +50,59 @@ fun RecruiterHomeScreen(
                 modifier = Modifier.padding(start = 16.dp, bottom = 8.dp),
                 color = Color(0xFF23235B)
             )
-            RecruiterCard(navController)
-            RecruiterCard(navController)
-            RecruiterCard(navController)
-            RecruiterCard(navController)
-            RecruiterCard(navController)
+
+            when (state) {
+                is HomeState.Loading -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            color = Color(0xFF23235B)
+                        )
+                    }
+                }
+                is HomeState.Success -> {
+                    val jobs = (state as HomeState.Success).jobs
+                    if (jobs.isEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "No recent job posts",
+                                color = Color(0xFF7C8493)
+                            )
+                        }
+                    } else {
+                        jobs.forEach { job ->
+                            RecruiterCard(
+                                navController = navController,
+                                job = job
+                            )
+                        }
+                    }
+                }
+                is HomeState.Error -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = (state as HomeState.Error).message,
+                            color = Color.Red
+                        )
+                    }
+                }
+                else -> {}
+            }
+
             Spacer(modifier = Modifier.height(130.dp))
         }
         RecruiterBottomBar(

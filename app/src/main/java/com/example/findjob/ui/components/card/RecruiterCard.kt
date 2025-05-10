@@ -15,17 +15,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.findjob.data.model.response.ListJobResponse
 
 @Composable
 fun RecruiterCard(
-    navController: NavController
-//    data: Any,
-//    onClick: () -> Unit,
+    navController: NavController,
+    job: ListJobResponse,
+    onClick: () -> Unit = {}
 ) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-//            .clickable { onClick() }
+            .clickable { onClick() }
             .padding(12.dp)
             .background(Color.White, shape = RoundedCornerShape(30.dp))
             .border(width = 1.dp, color = Color(0xFFE5E6EB), shape = RoundedCornerShape(30.dp)),
@@ -39,18 +40,18 @@ fun RecruiterCard(
                         .background(Color(0xFFD6D6FF), shape = CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("", fontSize = 16.sp) // Placeholder for logo
+                    Text("", fontSize = 16.sp)
                 }
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
                     Text(
-                        text = "Product Designer",
+                        text = job.title,
                         fontWeight = FontWeight.ExtraBold,
                         fontSize = 13.sp,
                         color = Color(0xFF1A1D1F),
                     )
                     Text(
-                        text = "Google inc · California, USA",
+                        text = "${job.nameCompany} · ${job.location}",
                         fontSize = 10.sp,
                         color = Color(0xFF7C8493),
                         modifier = Modifier.padding(top = 1.dp),
@@ -61,23 +62,17 @@ fun RecruiterCard(
             Spacer(modifier = Modifier.height(8.dp))
             Row(verticalAlignment = Alignment.Bottom) {
                 Text(
-                    text = "$15K",
+                    text = job.salary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp,
                     color = Color(0xFF1A1D1F)
                 )
-                Text(
-                    text = "/Mo",
-                    fontSize = 10.sp,
-                    color = Color(0xFF7C8493),
-                    modifier = Modifier.padding(start = 2.dp)
-                )
             }
             Spacer(modifier = Modifier.height(8.dp))
             Row {
-                Tag(text = "Senior designer", fontSize = 9)
+                Tag(text = job.position, fontSize = 9)
                 Spacer(modifier = Modifier.width(6.dp))
-                Tag(text = "Full time", fontSize = 9)
+                Tag(text = job.type, fontSize = 9)
                 Spacer(modifier = Modifier.width(6.dp))
                 CurriculumButton(navController)
             }
@@ -106,7 +101,7 @@ private fun CurriculumButton(navController: NavController) {
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "Curriculum",
+            text = "See Cv",
             color = Color(0xFFED7457),
             fontSize = 9.sp
         )
